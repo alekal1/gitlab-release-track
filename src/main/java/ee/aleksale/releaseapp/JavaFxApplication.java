@@ -1,6 +1,6 @@
 package ee.aleksale.releaseapp;
 
-import ee.aleksale.releaseapp.event.StageReadyEvent;
+import ee.aleksale.releaseapp.stage.StageReadyEvent;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
