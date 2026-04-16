@@ -1,4 +1,4 @@
-package ee.aleksale.releaseapp.stage;
+package ee.aleksale.releaseapp.ui.stage;
 
 import javafx.stage.Stage;
 import org.springframework.context.ApplicationEvent;

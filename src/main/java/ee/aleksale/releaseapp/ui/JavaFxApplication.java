@@ -1,6 +1,7 @@
-package ee.aleksale.releaseapp;
+package ee.aleksale.releaseapp.ui;
 
-import ee.aleksale.releaseapp.stage.StageReadyEvent;
+import ee.aleksale.releaseapp.GitlabReleaseTrackApplication;
+import ee.aleksale.releaseapp.ui.stage.StageReadyEvent;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;

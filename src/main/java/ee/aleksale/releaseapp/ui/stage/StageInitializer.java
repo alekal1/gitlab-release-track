@@ -1,4 +1,4 @@
-package ee.aleksale.releaseapp.stage;
+package ee.aleksale.releaseapp.ui.stage;
 
 import ee.aleksale.releaseapp.ui.MainController;
 import ee.aleksale.releaseapp.utils.AppConstants;
