@@ -1,5 +1,6 @@
 package ee.aleksale.releaseapp.ui.components;
 
+import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.utils.AppConstants;
@@ -53,6 +54,11 @@ public class ReleaseDatePicker {
 
   @EventListener
   public void onReleaseSaved(ReleaseSavedEvent event) {
+    refreshCalendarHighlights();
+  }
+
+  @EventListener
+  public void onReleaseDelete(ReleaseDeletedEvent event) {
     refreshCalendarHighlights();
   }
 

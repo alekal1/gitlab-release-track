@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Release {
 
+  private Long id;
   private String gitlabProjectName;
   private String version;
   private String gitHash;

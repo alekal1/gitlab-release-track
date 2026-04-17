@@ -1,5 +1,6 @@
 package ee.aleksale.releaseapp.service;
 
+import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.dto.Release;
@@ -26,10 +27,7 @@ public class ReleaseService {
   @Transactional
   @EventListener
   public void onReleaseSaved(ReleaseSavedEvent event) {
-    saveRelease(event.getRelease());
-  }
-
-  private void saveRelease(Release release) {
+    var release = event.getRelease();
     if (releaseRepository.existsByGitlabProjectNameAndVersion(release.getGitlabProjectName(), release.getVersion())) {
       return;
     }
@@ -38,8 +36,14 @@ public class ReleaseService {
       release.setPipelineStatus(PipelineStatus.PENDING);
     }
     releaseRepository.save(ReleaseMapper.INSTANCE.toReleaseEntity(release));
-//    return ReleaseMapper.INSTANCE.toRelease(savedEntity);
   }
+
+  @Transactional
+  @EventListener
+  public void onReleaseDeleted(ReleaseDeletedEvent event) {
+    releaseRepository.deleteById(event.getRelease().getId());
+  }
+
 
   public Set<LocalDate> getReleaseDates() {
     return releaseRepository.findDistinctReleaseDates();

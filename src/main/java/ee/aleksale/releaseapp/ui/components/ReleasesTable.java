@@ -1,5 +1,6 @@
 package ee.aleksale.releaseapp.ui.components;
 
+import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.service.ReleaseService;
@@ -10,12 +11,17 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +38,8 @@ public class ReleasesTable {
   private TableView<Release> table;
 
   private final ReleaseService releaseService;
+  private final ApplicationEventPublisher eventPublisher;
+
 
   @SuppressWarnings("unchecked")
   @PostConstruct
@@ -47,7 +55,8 @@ public class ReleasesTable {
             createPipelineColumn(),
             createStatusColumn(),
             createNotesColumn(),
-            createDateColumn()
+            createDateColumn(),
+            deleteButtonColumn()
     );
   }
 
@@ -125,6 +134,39 @@ public class ReleasesTable {
     var col = new TableColumn<Release, String>("Created");
     col.setCellValueFactory(c -> new SimpleStringProperty(
             c.getValue().getCreatedAt().format(DateUtils.FMT)));
+    return col;
+  }
+
+  private TableColumn<Release, Void> deleteButtonColumn() {
+    var col = new TableColumn<Release, Void>("");
+    col.setPrefWidth(40);
+    col.setMinWidth(40);
+    col.setMaxWidth(40);
+    col.setCellFactory(c -> new TableCell<>() {
+      private final Button btn = new Button(AppConstants.DELETE_ICON);
+      {
+        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #f44336; -fx-cursor: hand; -fx-font-size: 11;");
+        btn.setTooltip(new Tooltip("Delete release"));
+        btn.setOnAction(e -> {
+          Release release = getTableView().getItems().get(getIndex());
+          Alert confirm = new Alert(Alert.AlertType.CONFIRMATION,
+                  "Delete " + release.getGitlabProjectName() + " " + release.getVersion() + "?",
+                  ButtonType.YES, ButtonType.NO);
+          confirm.setHeaderText("Confirm Delete");
+          confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+              Platform.runLater(() -> refreshTable(release.getReleaseDate()));
+              eventPublisher.publishEvent(new ReleaseDeletedEvent(this, release));
+            }
+          });
+        });
+      }
+      @Override
+      protected void updateItem(Void item, boolean empty) {
+        super.updateItem(item, empty);
+        setGraphic(empty ? null : btn);
+      }
+    });
     return col;
   }
 }
