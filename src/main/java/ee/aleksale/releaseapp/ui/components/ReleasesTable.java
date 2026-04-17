@@ -5,6 +5,7 @@ import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import ee.aleksale.releaseapp.utils.DateUtils;
+import jakarta.annotation.PostConstruct;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -14,32 +15,44 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import lombok.Getter;
-import lombok.Setter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class ReleasesTable {
 
-  @Setter
+  private static final int GIT_HASH_DISPLAY_LENGTH = 8;
+
   private ObservableList<Release> releaseData;
   @Getter
   private TableView<Release> table;
 
   private final ReleaseService releaseService;
 
-  public ReleasesTable(ReleaseService releaseService) {
-    this.releaseService = releaseService;
+  @SuppressWarnings("unchecked")
+  @PostConstruct
+  void initTable() {
     releaseData = FXCollections.observableArrayList();
-    createTable();
+    table = new TableView<>();
+    table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+    table.setItems(releaseData);
+    table.getColumns().addAll(
+            createProjectColumn(),
+            createVersionColumn(),
+            createHashColumn(),
+            createPipelineColumn(),
+            createStatusColumn(),
+            createNotesColumn(),
+            createDateColumn()
+    );
   }
 
   public void refreshTable(LocalDate date) {
-    final var releases = releaseService.getReleasesByDateAndService(date);
-    releaseData.setAll(releases);
+    releaseData.setAll(releaseService.getReleasesByDateAndService(date));
   }
 
   @EventListener
@@ -47,61 +60,71 @@ public class ReleasesTable {
     Platform.runLater(() -> refreshTable(event.getRelease().getReleaseDate()));
   }
 
-  private void createTable() {
-    table = new TableView<>();
-    table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-    table.setItems(releaseData);
-
-    table.getColumns().addAll(createTableColumns());
+  private TableColumn<Release, String> createProjectColumn() {
+    var col = new TableColumn<Release, String>("Project");
+    col.setCellValueFactory(new PropertyValueFactory<>("gitlabProjectName"));
+    return col;
   }
 
-  private List<TableColumn<Release, String>> createTableColumns() {
-    var projectNameCol = new TableColumn<Release, String>("Project");
-    projectNameCol.setCellValueFactory(new PropertyValueFactory<>("gitlabProjectName"));
+  private TableColumn<Release, String> createVersionColumn() {
+    var col = new TableColumn<Release, String>("Version");
+    col.setCellValueFactory(new PropertyValueFactory<>("version"));
+    return col;
+  }
 
-    var versionCol = new TableColumn<Release, String>("Version");
-    versionCol.setCellValueFactory(new PropertyValueFactory<>("version"));
+  private TableColumn<Release, String> createHashColumn() {
+    var col = new TableColumn<Release, String>("Git Hash");
+    col.setCellValueFactory(c -> {
+      var hash = c.getValue().getGitHash();
+      var display = hash != null && hash.length() > GIT_HASH_DISPLAY_LENGTH
+              ? hash.substring(0, GIT_HASH_DISPLAY_LENGTH)
+              : hash;
+      return new SimpleStringProperty(display);
+    });
+    return col;
+  }
 
-    var hashCol = new TableColumn<Release, String>("Git Hash");
-    hashCol.setCellValueFactory(c -> new SimpleStringProperty(
-            c.getValue().getGitHash() != null && c.getValue().getGitHash().length() > 8
-                    ? c.getValue().getGitHash().substring(0, 8)
-                    : c.getValue().getGitHash()));
+  private TableColumn<Release, String> createPipelineColumn() {
+    var col = new TableColumn<Release, String>("Pipeline");
+    col.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPipelineType().name()));
+    return col;
+  }
 
-    var pipelineCol = new TableColumn<Release, String>("Pipeline");
-    pipelineCol.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPipelineType().name()));
-
-    var statusCol = new TableColumn<Release, String>("Status");
-    statusCol.setCellValueFactory(c -> new SimpleStringProperty(
+  private TableColumn<Release, String> createStatusColumn() {
+    var col = new TableColumn<Release, String>("Status");
+    col.setCellValueFactory(c -> new SimpleStringProperty(
             c.getValue().getPipelineStatus() != null ? c.getValue().getPipelineStatus().name() : ""));
-    statusCol.setCellFactory(col -> new TableCell<>() {
+    col.setCellFactory(ignored -> new TableCell<>() {
       @Override
       protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
         setText(empty ? null : item);
         if (!empty && item != null) {
-          switch (item) {
-            case AppConstants.PIPELINE_STATUS_SUCCESS ->  setStyle("-fx-text-fill: #4caf50;");
-            case AppConstants.PIPELINE_STATUS_FAILED -> setStyle("-fx-text-fill: #f44336;");
-            case AppConstants.PIPELINE_STATUS_RUNNING -> setStyle("-fx-text-fill: #ff9800;");
-            default -> setStyle("-fx-text-fill: #90caf9;");
-          }
+          setStyle(switch (item) {
+            case AppConstants.PIPELINE_STATUS_SUCCESS -> "-fx-text-fill: #4caf50;";
+            case AppConstants.PIPELINE_STATUS_FAILED -> "-fx-text-fill: #f44336;";
+            case AppConstants.PIPELINE_STATUS_RUNNING -> "-fx-text-fill: #ff9800;";
+            default -> "-fx-text-fill: #90caf9;";
+          });
         } else {
           setStyle("");
         }
       }
     });
+    return col;
+  }
 
-    var notesCol = new TableColumn<Release, String>("Notes");
-    notesCol.setCellValueFactory(c -> new SimpleStringProperty(
+  private TableColumn<Release, String> createNotesColumn() {
+    var col = new TableColumn<Release, String>("Notes");
+    col.setCellValueFactory(c -> new SimpleStringProperty(
             c.getValue().getNotes() != null ? c.getValue().getNotes() : ""));
+    return col;
+  }
 
-    var dateCol = new TableColumn<Release, String>("Created");
-    dateCol.setCellValueFactory(c -> new SimpleStringProperty(
+  private TableColumn<Release, String> createDateColumn() {
+    var col = new TableColumn<Release, String>("Created");
+    col.setCellValueFactory(c -> new SimpleStringProperty(
             c.getValue().getCreatedAt().format(DateUtils.FMT)));
-
-    return List.of(
-            projectNameCol, versionCol, hashCol, pipelineCol, statusCol, notesCol, dateCol
-    );
+    return col;
   }
 }
