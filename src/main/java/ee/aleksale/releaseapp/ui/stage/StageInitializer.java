@@ -1,6 +1,6 @@
 package ee.aleksale.releaseapp.ui.stage;
 
-import ee.aleksale.releaseapp.ui.MainController;
+import ee.aleksale.releaseapp.ui.MainScene;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -16,12 +16,12 @@ public class StageInitializer implements ApplicationListener<StageReadyEvent> {
 
     private static final String STYLES_PATH = "/styles/dark-theme.css";
 
-    private final MainController mainController;
+    private final MainScene mainScene;
 
     @Override
     public void onApplicationEvent(StageReadyEvent event) {
         Stage stage = event.getStage();
-        Scene scene = new Scene(mainController.build(), AppConstants.STAGE_WIDTH, AppConstants.STAGE_HEIGHT);
+        Scene scene = new Scene(mainScene.build(), AppConstants.STAGE_WIDTH, AppConstants.STAGE_HEIGHT);
         scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource(STYLES_PATH)).toExternalForm());
         stage.setTitle(AppConstants.STAGE_TITLE);
         stage.setScene(scene);

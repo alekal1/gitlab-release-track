@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MainController {
+public class MainScene {
 
   private final ReleaseDatePicker releaseDatePicker;
   private final ReleasesTable releasesTable;
