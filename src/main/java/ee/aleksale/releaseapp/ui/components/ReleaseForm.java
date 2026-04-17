@@ -8,12 +8,11 @@ import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.service.GitlabProjectService;
 import ee.aleksale.releaseapp.service.GitlabTagsService;
 import ee.aleksale.releaseapp.utils.AppConstants;
+import ee.aleksale.releaseapp.utils.AsyncUtils;
 import jakarta.annotation.PostConstruct;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
@@ -29,16 +28,17 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReleaseForm {
@@ -58,54 +58,67 @@ public class ReleaseForm {
 
   @PostConstruct
   void initForm() {
-    createForm();
-  }
-
-  private void createForm() {
     form = new VBox(8);
     form.setPadding(new Insets(10));
     form.setPrefWidth(AppConstants.FORM_WIDTH);
     form.getStyleClass().add("form-panel");
 
-    form.getChildren().addAll(createFormContent());
+    initComponents();
+    form.getChildren().addAll(
+            createTitle(),
+            new Label("Project:"), serviceCombo, createSearchBox(), new Separator(),
+            new Label("Version / Tag :"), createVersionBox(),
+            new Label("Git Hash:"), hashField,
+            new Label("Notes:"), notesField,
+            new Separator(),
+            createSaveButton()
+    );
   }
 
-  private Collection<Node> createFormContent() {
-    Label title = new Label("New Release");
+  private void initComponents() {
+    serviceCombo = createProjectCombo();
+    versionCombo = createVersionCombo();
+    hashField = createHashField();
+    notesField = new TextField();
+    notesField.setPromptText("Notes");
+  }
+
+  private Label createTitle() {
+    var title = new Label("New Release");
     title.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+    return title;
+  }
 
-    Label projectLabel = new Label("Project:");
+  private ComboBox<GitlabProject> createProjectCombo() {
+    var combo = new ComboBox<GitlabProject>();
+    combo.setMaxWidth(Double.MAX_VALUE);
+    combo.setPromptText("Select saved project");
+    combo.setCellFactory(lv -> projectCell(p -> p.getName() + " (" + p.getGitlabProjectId() + ")"));
+    combo.setButtonCell(projectCell(GitlabProject::getName));
+    refreshProjectCombo(combo);
 
-    serviceCombo = new ComboBox<>();
-    serviceCombo.setMaxWidth(Double.MAX_VALUE);
-    serviceCombo.setPromptText("Select saved project");
-    serviceCombo.setCellFactory(lv -> new ListCell<>() {
-      @Override
-      protected void updateItem(GitlabProject item, boolean empty) {
-        super.updateItem(item, empty);
-        setText(empty || item == null ? null : item.getName() + " (" + item.getGitlabProjectId() + ")");
-      }
-    });
-    serviceCombo.setButtonCell(new ListCell<>() {
-      @Override
-      protected void updateItem(GitlabProject item, boolean empty) {
-        super.updateItem(item, empty);
-        setText(empty || item == null ? null : item.getName());
-      }
-    });
-    refreshProjectCombo();
-
-    serviceCombo.setOnAction(e -> {
-      var selectedProject = getSelectedProject();
-
-      if (selectedProject != null) {
-        loadTags(selectedProject);
-      } else if (versionCombo != null) {
+    combo.valueProperty().addListener((obs, oldVal, newVal) -> {
+      if (newVal != null && !newVal.equals(oldVal)) {
+        loadTags(newVal);
+      } else if (newVal == null && versionCombo != null) {
         versionCombo.getItems().clear();
         tagHashMap.clear();
       }
     });
+    return combo;
+  }
 
+  private ListCell<GitlabProject> projectCell(java.util.function.Function<GitlabProject, String> formatter) {
+    return new ListCell<>() {
+      @Override
+      protected void updateItem(GitlabProject item, boolean empty) {
+        super.updateItem(item, empty);
+        setText(empty || item == null ? null : formatter.apply(item));
+      }
+    };
+  }
+
+  private HBox createSearchBox() {
     var searchField = new TextField();
     searchField.setPromptText("Search GitLab projects...");
 
@@ -113,54 +126,50 @@ public class ReleaseForm {
     searchBtn.setMaxWidth(Double.MAX_VALUE);
     searchBtn.setOnAction(e -> searchProjects(searchField.getText().trim()));
 
-    var searchBox = new HBox(5, searchField, searchBtn);
-    searchBox.setAlignment(Pos.CENTER_LEFT);
+    var box = new HBox(5, searchField, searchBtn);
+    box.setAlignment(Pos.CENTER_LEFT);
     HBox.setHgrow(searchField, Priority.ALWAYS);
+    return box;
+  }
 
-    versionCombo = new ComboBox<>();
-    versionCombo.setEditable(true);
-    versionCombo.setPromptText("Select tag or type version");
-    versionCombo.setMaxWidth(Double.MAX_VALUE);
-    versionCombo.valueProperty().addListener((obs, oldVal, newVal) -> {
+  private ComboBox<String> createVersionCombo() {
+    var combo = new ComboBox<String>();
+    combo.setEditable(true);
+    combo.setPromptText("Select tag or type version");
+    combo.setMaxWidth(Double.MAX_VALUE);
+    combo.valueProperty().addListener((obs, oldVal, newVal) -> {
       if (newVal != null && tagHashMap.containsKey(newVal)) {
         hashField.setText(tagHashMap.get(newVal));
       }
     });
-
-    var refreshTagsBtn = new Button(AppConstants.REFRESH_ICON);
-    refreshTagsBtn.setTooltip(new Tooltip(AppConstants.REFRESH_TOOLTIP));
-    refreshTagsBtn.setOnAction(e -> {
-      var project = getSelectedProject();
-      loadTags(project);
-    });
-
-    HBox versionBox = new HBox(5, versionCombo, refreshTagsBtn);
-    versionBox.setAlignment(Pos.CENTER_LEFT);
-    HBox.setHgrow(versionCombo, Priority.ALWAYS);
-
-    hashField = new TextField();
-    hashField.setPromptText("Git hash (auto-filled from tag)");
-    hashField.setEditable(false);
-
-    notesField = new TextField();
-    notesField.setPromptText("Notes");
-
-    var saveBtn = new Button("Save Release");
-    saveBtn.setMaxWidth(Double.MAX_VALUE);
-    saveBtn.getStyleClass().add("primary-button");
-    saveBtn.setOnAction(e -> createAndSaveRelease());
-
-    return List.of(
-            title,
-            projectLabel, serviceCombo, searchBox, new Separator(),
-            new Label("Version / Tag :"), versionBox,
-            new Label("Git Hash:"), hashField,
-            new Label("Notes:"), notesField,
-            new Separator(),
-            saveBtn
-    );
+    return combo;
   }
 
+  private HBox createVersionBox() {
+    var refreshTagsBtn = new Button(AppConstants.REFRESH_ICON);
+    refreshTagsBtn.setTooltip(new Tooltip(AppConstants.REFRESH_TOOLTIP));
+    refreshTagsBtn.setOnAction(e -> loadTags(serviceCombo.getValue()));
+
+    var box = new HBox(5, versionCombo, refreshTagsBtn);
+    box.setAlignment(Pos.CENTER_LEFT);
+    HBox.setHgrow(versionCombo, Priority.ALWAYS);
+    return box;
+  }
+
+  private TextField createHashField() {
+    var field = new TextField();
+    field.setPromptText("Git hash (auto-filled from tag)");
+    field.setEditable(false);
+    return field;
+  }
+
+  private Button createSaveButton() {
+    var btn = new Button("Save Release");
+    btn.setMaxWidth(Double.MAX_VALUE);
+    btn.getStyleClass().add("primary-button");
+    btn.setOnAction(e -> createAndSaveRelease());
+    return btn;
+  }
 
   private void loadTags(GitlabProject selectedProject) {
     if (selectedProject == null) {
@@ -173,49 +182,38 @@ public class ReleaseForm {
     versionCombo.getEditor().clear();
     hashField.clear();
 
-    Thread.ofVirtual().start(() -> {
-      var tags = gitlabTagsService.loadTagsForProject(selectedProject.getGitlabProjectId());
-
-      Platform.runLater(() -> {
-
-        if (tags == null || tags.isEmpty()) {
-//            setStatus("No tags found for " + selectedProject.getName());
-          return;
-        }
-        for (var t : tags) {
-          tagHashMap.put(t.getName(), t.getCommit().getId());
-          versionCombo.getItems().add(t.getName());
-        }
-//          setStatus("Loaded " + tags.size() + " tags for " + selectedProject.getName());
-      });
-    });
+    AsyncUtils.platformRunLater(
+            () -> gitlabTagsService.loadTagsForProject(selectedProject.getGitlabProjectId()),
+            tags -> {
+              if (tags == null || tags.isEmpty()) {
+                return;
+              }
+              for (var t : tags) {
+                tagHashMap.put(t.getName(), t.getCommit().getId());
+                versionCombo.getItems().add(t.getName());
+              }
+            }
+    );
   }
 
   private void searchProjects(String query) {
     if (StringUtils.isBlank(query)) {
-//      setStatus("Enter a search term");
       return;
     }
-//    setStatus("Searching GitLab for '" + query + "'...");
-    Thread.ofVirtual().start(() -> {
-      try {
-        var results = gitlabProjectService.searchProject(query);
-        Platform.runLater(() -> showSearchResults(results));
-      } catch (Exception e) {
-//        Platform.runLater(() -> setStatus("Search failed: " + e.getMessage()));
-      }
-    });
+    AsyncUtils.platformRunLater(
+            () -> gitlabProjectService.searchProject(query),
+            this::showSearchResults
+    );
   }
 
   private void createAndSaveRelease() {
-    var project = getSelectedProject();
+    var project = serviceCombo.getValue();
     if (project == null) {
       return;
     }
 
     var version = getVersionText();
     if (StringUtils.isBlank(version)) {
-//      setStatus("Version is required");
       return;
     }
 
@@ -229,13 +227,11 @@ public class ReleaseForm {
             .releaseDate(getSelectedDate())
             .build();
     clearForm();
-    // setStatus("Release saved: " + project.getName() + " " + version + " for " + getSelectedDate());
     eventPublisher.publishEvent(new ReleaseSavedEvent(this, release));
   }
 
   private void showSearchResults(List<GitlabProject> results) {
     if (results.isEmpty()) {
-//      setStatus("No projects found");
       return;
     }
 
@@ -250,17 +246,7 @@ public class ReleaseForm {
     dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
     ListView<GitlabProject> listView = new ListView<>(FXCollections.observableArrayList(results));
-    listView.setCellFactory(lv -> new ListCell<>() {
-      @Override
-      protected void updateItem(GitlabProject item, boolean empty) {
-        super.updateItem(item, empty);
-        if (empty || item == null) {
-          setText(null);
-        } else {
-          setText(item.getName() + "  [ID: " + item.getGitlabProjectId() + "]");
-        }
-      }
-    });
+    listView.setCellFactory(lv -> projectCell(p -> p.getName() + "  [ID: " + p.getGitlabProjectId() + "]"));
     listView.setPrefHeight(AppConstants.PROJECT_CHOOSE_DIALOG_HEIGHT);
     listView.setPrefWidth(AppConstants.PROJECT_CHOOSE_DIALOG_WIDTH);
 
@@ -272,36 +258,25 @@ public class ReleaseForm {
 
   private void addAndSelectProject(GitlabProject project) {
     var saved = gitlabProjectService.saveProject(project);
-    refreshProjectCombo();
+    refreshProjectCombo(serviceCombo);
     serviceCombo.getItems().stream()
             .filter(p -> p.getGitlabProjectId().equals(saved.getGitlabProjectId()))
             .findFirst()
             .ifPresent(serviceCombo::setValue);
-    loadTags(getSelectedProject());
-//    setStatus("Added project: " + saved.getName());
+    loadTags(serviceCombo.getValue());
   }
 
-  private void refreshProjectCombo() {
-    var selected = serviceCombo.getValue();
-
+  private void refreshProjectCombo(ComboBox<GitlabProject> combo) {
+    var selected = combo.getValue();
     var projects = gitlabProjectService.getSavedProjects();
-    serviceCombo.setItems(FXCollections.observableArrayList(projects));
+    combo.setItems(FXCollections.observableArrayList(projects));
 
     if (selected != null) {
       projects.stream()
               .filter(p -> p.getGitlabProjectId().equals(selected.getGitlabProjectId()))
               .findFirst()
-              .ifPresent(serviceCombo::setValue);
+              .ifPresent(combo::setValue);
     }
-  }
-
-  private GitlabProject getSelectedProject() {
-    var project = serviceCombo.getValue();
-    if (project == null) {
-//      setStatus("Select a project first");
-      return null;
-    }
-    return project;
   }
 
   private String getVersionText() {
