@@ -27,10 +27,8 @@ import java.util.Optional;
 @ExtendWith(MockitoExtension.class)
 class GitlabProjectServiceTest {
 
-
   private GitlabProjectRepository gitlabProjectRepository;
   private GitlabApiService gitlabApiService;
-
 
   private GitlabProjectService gitlabProjectService;
 
