@@ -1,4 +1,4 @@
-package ee.aleksale.releaseapp.domain;
+package ee.aleksale.releaseapp.model.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,17 +23,21 @@ import java.util.Objects;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GitlabProject {
+public class GitlabProjectEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
   @Column(nullable = false, unique = true)
-  private String gitlabProjectId;
+  private Long gitlabProjectId;
 
   @Column(nullable = false)
   private String name;
+
+  private String nameWithNamespace;
+
+  private String webUrl;
 
   @Column(nullable = false)
   private LocalDateTime addedAt;
@@ -54,7 +58,7 @@ public class GitlabProject {
   public boolean equals(Object o) {
     if (this == o) return true;
     if (o == null || getClass() != o.getClass()) return false;
-    GitlabProject that = (GitlabProject) o;
+    GitlabProjectEntity that = (GitlabProjectEntity) o;
     return Objects.equals(gitlabProjectId, that.gitlabProjectId);
   }
 

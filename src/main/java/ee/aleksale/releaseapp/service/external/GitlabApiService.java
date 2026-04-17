@@ -2,10 +2,15 @@ package ee.aleksale.releaseapp.service.external;
 
 
 import ee.aleksale.releaseapp.config.GitlabConfig;
+import ee.aleksale.releaseapp.model.dto.GitlabSearchResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -31,5 +36,12 @@ public class GitlabApiService {
     return webClient.post()
             .uri(gitlabConfig.getBaseUrl() + "/api/v4" + uri)
             .header(HttpHeaders.AUTHORIZATION, TOKEN_PREFIX + gitlabConfig.getToken());
+  }
+
+  public Mono<List<GitlabSearchResponse>> searchProjects(String projectName) {
+    return get("/projects?search=" + projectName + "&membership=true&per_page=20&order_by=name")
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<List<GitlabSearchResponse>>() {})
+            .doOnError(e -> log.error("Failed to search projects: {}", e.getMessage()));
   }
 }

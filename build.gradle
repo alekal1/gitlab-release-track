@@ -29,8 +29,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'com.opencsv:opencsv:5.9'
 
+    implementation 'org.mapstruct:mapstruct:1.6.3'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
+    testAnnotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
     runtimeOnly 'com.h2database:h2'
 
