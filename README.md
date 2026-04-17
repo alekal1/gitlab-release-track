@@ -1,3 +1,5 @@
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/alekal1/gitlab-release-track)
+
 # Release Management Desktop App
 
 ## Motivation
