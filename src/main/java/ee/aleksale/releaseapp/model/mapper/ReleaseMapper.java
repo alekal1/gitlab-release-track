@@ -11,5 +11,6 @@ public interface ReleaseMapper {
   ReleaseMapper INSTANCE = Mappers.getMapper(ReleaseMapper.class);
 
   Release toRelease(ReleaseEntity entity);
+  ReleaseEntity toReleaseEntity(Release release);
 
 }

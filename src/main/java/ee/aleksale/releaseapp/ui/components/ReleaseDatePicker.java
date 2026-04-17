@@ -1,15 +1,20 @@
 package ee.aleksale.releaseapp.ui.components;
 
+import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
+import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Tooltip;
 import javafx.util.Callback;
 import lombok.Getter;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.Set;
 
+@Component
 public class ReleaseDatePicker {
 
   @Getter
@@ -17,13 +22,18 @@ public class ReleaseDatePicker {
   @Getter
   private Set<LocalDate> datesWithReleases;
 
-  public ReleaseDatePicker(LocalDate localDate) {
-    datePicker = new DatePicker(localDate);
+  private final ReleaseService releaseService;
+
+  public ReleaseDatePicker(ReleaseService releaseService) {
+    this.releaseService = releaseService;
+
+    datePicker = new DatePicker(LocalDate.now());
     datePicker.setPrefWidth(AppConstants.DATE_PICKER_WIDTH);
+    refreshCalendarHighlights();
   }
 
-  public void refreshCalendarHighlights(Set<LocalDate> dates) {
-    datesWithReleases = dates;
+  public void refreshCalendarHighlights() {
+    datesWithReleases = releaseService.getReleaseDates();
     datePicker.setDayCellFactory(createHighlightedDayCellFactory());
   }
 
@@ -39,6 +49,11 @@ public class ReleaseDatePicker {
         }
       }
     };
+  }
+
+  @EventListener
+  public void onReleaseSaved(ReleaseSavedEvent event) {
+    refreshCalendarHighlights();
   }
 
 }

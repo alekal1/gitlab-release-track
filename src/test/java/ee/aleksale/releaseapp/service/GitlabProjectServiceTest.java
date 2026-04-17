@@ -10,7 +10,7 @@ import static org.mockito.Mockito.verify;
 
 import ee.aleksale.releaseapp.model.domain.GitlabProjectEntity;
 import ee.aleksale.releaseapp.model.dto.GitlabProject;
-import ee.aleksale.releaseapp.model.dto.GitlabSearchResponse;
+import ee.aleksale.releaseapp.model.dto.response.GitlabSearchResponse;
 import ee.aleksale.releaseapp.repository.GitlabProjectRepository;
 import ee.aleksale.releaseapp.service.external.GitlabApiService;
 import org.junit.jupiter.api.BeforeEach;

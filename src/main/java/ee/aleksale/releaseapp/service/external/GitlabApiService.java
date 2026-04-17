@@ -2,7 +2,8 @@ package ee.aleksale.releaseapp.service.external;
 
 
 import ee.aleksale.releaseapp.config.GitlabConfig;
-import ee.aleksale.releaseapp.model.dto.GitlabSearchResponse;
+import ee.aleksale.releaseapp.model.dto.response.GitlabFetchTagsResponse;
+import ee.aleksale.releaseapp.model.dto.response.GitlabSearchResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -32,16 +33,17 @@ public class GitlabApiService {
             .header(HttpHeaders.AUTHORIZATION, TOKEN_PREFIX + gitlabConfig.getToken());
   }
 
-  private WebClient.RequestBodySpec post(String uri) {
-    return webClient.post()
-            .uri(gitlabConfig.getBaseUrl() + "/api/v4" + uri)
-            .header(HttpHeaders.AUTHORIZATION, TOKEN_PREFIX + gitlabConfig.getToken());
-  }
-
   public Mono<List<GitlabSearchResponse>> searchProjects(String projectName) {
     return get("/projects?search=" + projectName + "&membership=true&per_page=20&order_by=name")
             .retrieve()
             .bodyToMono(new ParameterizedTypeReference<List<GitlabSearchResponse>>() {})
             .doOnError(e -> log.error("Failed to search projects: {}", e.getMessage()));
+  }
+
+  public Mono<List<GitlabFetchTagsResponse>> fetchTags(Long gitlabProjectId) {
+    return get("/projects/" + gitlabProjectId + "/repository/tags?order_by=updated&sort=desc&per_page=100")
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<List<GitlabFetchTagsResponse>>() {})
+            .doOnError(e -> log.error("Failed to fetch tags for project {}: {}", gitlabProjectId, e.getMessage()));
   }
 }

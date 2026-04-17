@@ -1,4 +1,4 @@
-package ee.aleksale.releaseapp.model.dto;
+package ee.aleksale.releaseapp.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

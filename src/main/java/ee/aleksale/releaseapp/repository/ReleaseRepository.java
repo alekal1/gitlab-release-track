@@ -14,4 +14,6 @@ public interface ReleaseRepository extends JpaRepository<ReleaseEntity, Long> {
   Set<LocalDate> findDistinctReleaseDates();
 
   List<ReleaseEntity> findByReleaseDateOrderByCreatedAtDesc(LocalDate releaseDate);
+
+  boolean existsByGitlabProjectNameAndVersion(String gitlabProjectName, String version);
 }

@@ -1,8 +1,11 @@
 package ee.aleksale.releaseapp.ui.components;
 
+import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.model.dto.Release;
+import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import ee.aleksale.releaseapp.utils.DateUtils;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -12,9 +15,13 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
+@Component
 public class ReleasesTable {
 
   @Setter
@@ -22,15 +29,23 @@ public class ReleasesTable {
   @Getter
   private TableView<Release> table;
 
-  public ReleasesTable() {
+  private final ReleaseService releaseService;
+
+  public ReleasesTable(ReleaseService releaseService) {
+    this.releaseService = releaseService;
     releaseData = FXCollections.observableArrayList();
     createTable();
   }
 
-  public void refreshTable(List<Release> releases) {
+  public void refreshTable(LocalDate date) {
+    final var releases = releaseService.getReleasesByDateAndService(date);
     releaseData.setAll(releases);
   }
 
+  @EventListener
+  public void onReleaseSaved(ReleaseSavedEvent event) {
+    Platform.runLater(() -> refreshTable(event.getRelease().getReleaseDate()));
+  }
 
   private void createTable() {
     table = new TableView<>();

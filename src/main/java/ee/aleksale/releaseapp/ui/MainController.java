@@ -1,7 +1,5 @@
 package ee.aleksale.releaseapp.ui;
 
-import ee.aleksale.releaseapp.service.GitlabProjectService;
-import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.ui.components.ReleaseDatePicker;
 import ee.aleksale.releaseapp.ui.components.ReleaseForm;
 import ee.aleksale.releaseapp.ui.components.ReleasesTable;
@@ -18,19 +16,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class MainController {
 
-  private final ReleaseDatePicker releaseDatePicker = new ReleaseDatePicker(LocalDate.now());
-  private final ReleasesTable releasesTable = new ReleasesTable();
-  private final ReleaseForm releaseForm = new ReleaseForm();
-
-  private final ReleaseService releaseService;
-  private final GitlabProjectService gitlabProjectService;
+  private final ReleaseDatePicker releaseDatePicker;
+  private final ReleasesTable releasesTable;
+  private final ReleaseForm releaseForm;
 
   public Parent build() {
     var root = new BorderPane();
@@ -40,7 +33,7 @@ public class MainController {
     root.setCenter(releasesTable.getTable());
     root.setRight(releaseForm.getForm());
 
-    releaseForm.refreshProjectCombo(gitlabProjectService.getSavedProjects());
+    releasesTable.refreshTable(releaseDatePicker.getDatePicker().getValue());
 
     return root;
   }
@@ -49,13 +42,11 @@ public class MainController {
     var exportMdBtn = new Button("Export Markdown");
     // TODO: Export markdown functionality
 
-    releaseDatePicker.refreshCalendarHighlights(releaseService.getReleaseDates());
     releaseDatePicker
             .getDatePicker()
             .valueProperty()
             .addListener((obs, o, n) ->
-                    releasesTable.refreshTable(releaseService.getReleasesByDateAndService(
-                            releaseDatePicker.getDatePicker().getValue()))
+                    releasesTable.refreshTable(releaseDatePicker.getDatePicker().getValue())
     );
 
     var top = new HBox(10,
