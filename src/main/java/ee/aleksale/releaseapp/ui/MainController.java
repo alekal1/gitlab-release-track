@@ -1,7 +1,9 @@
 package ee.aleksale.releaseapp.ui;
 
+import ee.aleksale.releaseapp.service.GitlabProjectService;
 import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.ui.components.ReleaseDatePicker;
+import ee.aleksale.releaseapp.ui.components.ReleaseForm;
 import ee.aleksale.releaseapp.ui.components.ReleasesTable;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -25,16 +27,20 @@ public class MainController {
 
   private final ReleaseDatePicker releaseDatePicker = new ReleaseDatePicker(LocalDate.now());
   private final ReleasesTable releasesTable = new ReleasesTable();
+  private final ReleaseForm releaseForm = new ReleaseForm();
 
   private final ReleaseService releaseService;
+  private final GitlabProjectService gitlabProjectService;
 
   public Parent build() {
     var root = new BorderPane();
     root.getStyleClass().add("root-pane");
 
-    final var top = createTopBar();
-    root.setTop(top);
+    root.setTop(createTopBar());
     root.setCenter(releasesTable.getTable());
+    root.setRight(releaseForm.getForm());
+
+    releaseForm.refreshProjectCombo(gitlabProjectService.getSavedProjects());
 
     return root;
   }

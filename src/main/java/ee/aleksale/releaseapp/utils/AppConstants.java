@@ -9,6 +9,7 @@ public class AppConstants {
   public static final int STAGE_WIDTH = 1100;
   public static final int STAGE_HEIGHT = 700;
   public static final int DATE_PICKER_WIDTH = 150;
+  public static final int FORM_WIDTH = 320;
   public static final String PIPELINE_STATUS_SUCCESS = "SUCCESS";
   public static final String PIPELINE_STATUS_FAILED = "FAILED";
   public static final String PIPELINE_STATUS_RUNNING = "RUNNING";
