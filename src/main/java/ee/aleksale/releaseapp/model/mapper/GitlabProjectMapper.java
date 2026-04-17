@@ -10,6 +10,6 @@ public interface GitlabProjectMapper {
   GitlabProjectMapper INSTANCE = Mappers.getMapper(GitlabProjectMapper.class);
 
   GitlabProject toGitlabProject(GitlabProjectEntity entity);
-  GitlabProjectEntity toGitlabProjectEntity(GitlabProject gitlabProject);
+  GitlabProjectEntity toGitlabProjectEntity(GitlabProject dto);
 
 }

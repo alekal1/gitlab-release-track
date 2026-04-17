@@ -1,7 +1,8 @@
 package ee.aleksale.releaseapp.ui;
 
-import ee.aleksale.releaseapp.service.GitlabProjectService;
+import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.ui.components.ReleaseDatePicker;
+import ee.aleksale.releaseapp.ui.components.ReleasesTable;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -23,7 +24,9 @@ import java.time.LocalDate;
 public class MainController {
 
   private final ReleaseDatePicker releaseDatePicker = new ReleaseDatePicker(LocalDate.now());
-  private final GitlabProjectService gitlabProjectService;
+  private final ReleasesTable releasesTable = new ReleasesTable();
+
+  private final ReleaseService releaseService;
 
   public Parent build() {
     var root = new BorderPane();
@@ -31,6 +34,7 @@ public class MainController {
 
     final var top = createTopBar();
     root.setTop(top);
+    root.setCenter(releasesTable.getTable());
 
     return root;
   }
@@ -38,6 +42,15 @@ public class MainController {
   private HBox createTopBar() {
     var exportMdBtn = new Button("Export Markdown");
     // TODO: Export markdown functionality
+
+    releaseDatePicker.refreshCalendarHighlights(releaseService.getReleaseDates());
+    releaseDatePicker
+            .getDatePicker()
+            .valueProperty()
+            .addListener((obs, o, n) ->
+                    releasesTable.refreshTable(releaseService.getReleasesByDateAndService(
+                            releaseDatePicker.getDatePicker().getValue()))
+    );
 
     var top = new HBox(10,
             new Label("Release Day:"), releaseDatePicker.getDatePicker(),

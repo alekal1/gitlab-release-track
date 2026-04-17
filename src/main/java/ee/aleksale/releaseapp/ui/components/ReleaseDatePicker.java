@@ -14,19 +14,16 @@ public class ReleaseDatePicker {
 
   @Getter
   private final DatePicker datePicker;
-
   @Getter
   private Set<LocalDate> datesWithReleases;
 
   public ReleaseDatePicker(LocalDate localDate) {
     datePicker = new DatePicker(localDate);
     datePicker.setPrefWidth(AppConstants.DATE_PICKER_WIDTH);
-
-    refreshCalendarHighlights();
   }
 
-  public void refreshCalendarHighlights() {
-    datesWithReleases = Set.of();
+  public void refreshCalendarHighlights(Set<LocalDate> dates) {
+    datesWithReleases = dates;
     datePicker.setDayCellFactory(createHighlightedDayCellFactory());
   }
 
