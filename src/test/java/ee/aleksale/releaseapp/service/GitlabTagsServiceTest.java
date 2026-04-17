@@ -29,7 +29,7 @@ class GitlabTagsServiceTest {
   }
 
   @Test
-  void shouldReturnTags_whenLoadTagsForProject_withValidProjectId() {
+  void shouldReturnTags_whenGetTagsForProject_withValidProjectId() {
     final var tagA = new GitlabFetchTagsResponse();
     tagA.setName("v1.0.0");
 
@@ -38,9 +38,9 @@ class GitlabTagsServiceTest {
 
     doReturn(Mono.just(List.of(tagA, tagB)))
         .when(gitlabApiService)
-        .fetchTags(10L);
+        .getTags(10L);
 
-    final var result = gitlabTagsService.loadTagsForProject(10L);
+    final var result = gitlabTagsService.getTagsForProject(10L);
 
     assertNotNull(result);
     assertEquals(2, result.size());
@@ -49,12 +49,12 @@ class GitlabTagsServiceTest {
   }
 
   @Test
-  void shouldReturnEmptyList_whenLoadTagsForProject_withNoTags() {
+  void shouldReturnEmptyList_whenGetTagsForProject_withNoTags() {
     doReturn(Mono.just(List.of()))
         .when(gitlabApiService)
-        .fetchTags(99L);
+        .getTags(99L);
 
-    final var result = gitlabTagsService.loadTagsForProject(99L);
+    final var result = gitlabTagsService.getTagsForProject(99L);
 
     assertNotNull(result);
     assertEquals(0, result.size());

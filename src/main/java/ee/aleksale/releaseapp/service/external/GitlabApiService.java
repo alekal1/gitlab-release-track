@@ -3,6 +3,8 @@ package ee.aleksale.releaseapp.service.external;
 
 import ee.aleksale.releaseapp.config.GitlabConfig;
 import ee.aleksale.releaseapp.model.dto.response.GitlabFetchTagsResponse;
+import ee.aleksale.releaseapp.model.dto.response.GitlabPipelineJobResponse;
+import ee.aleksale.releaseapp.model.dto.response.GitlabPipelineResponse;
 import ee.aleksale.releaseapp.model.dto.response.GitlabSearchResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
@@ -40,10 +42,24 @@ public class GitlabApiService {
             .doOnError(e -> log.error("Failed to search projects: {}", e.getMessage()));
   }
 
-  public Mono<List<GitlabFetchTagsResponse>> fetchTags(Long gitlabProjectId) {
+  public Mono<List<GitlabFetchTagsResponse>> getTags(Long gitlabProjectId) {
     return get("/projects/" + gitlabProjectId + "/repository/tags?order_by=updated&sort=desc&per_page=100")
             .retrieve()
             .bodyToMono(new ParameterizedTypeReference<List<GitlabFetchTagsResponse>>() {})
             .doOnError(e -> log.error("Failed to fetch tags for project {}: {}", gitlabProjectId, e.getMessage()));
+  }
+
+  public Mono<List<GitlabPipelineResponse>> getPipelines(Long gitlabProjectId, String version) {
+    return get("/projects/" + gitlabProjectId + "/pipelines?ref=" + version)
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<List<GitlabPipelineResponse>>() {})
+            .doOnError(e -> log.error("Failed to fetch pipelines for project {}: {}", gitlabProjectId, e.getMessage()));
+  }
+
+  public Mono<List<GitlabPipelineJobResponse>> getPipelineJobs(Long gitlabProjectId, Long pipelineId) {
+    return get("/projects/" + gitlabProjectId + "/pipelines/" + pipelineId + "/jobs")
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<List<GitlabPipelineJobResponse>>() {})
+            .doOnError(e -> log.error("Failed to fetch pipeline jobs for project {}, pipeline {}: {}", gitlabProjectId, pipelineId, e.getMessage()));
   }
 }

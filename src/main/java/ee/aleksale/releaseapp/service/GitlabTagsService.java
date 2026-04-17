@@ -15,7 +15,7 @@ public class GitlabTagsService {
 
   private final GitlabApiService gitlabApiService;
 
-  public List<GitlabFetchTagsResponse> loadTagsForProject(Long gitlabProjectId) {
-     return gitlabApiService.fetchTags(gitlabProjectId).block();
+  public List<GitlabFetchTagsResponse> getTagsForProject(Long gitlabProjectId) {
+     return gitlabApiService.getTags(gitlabProjectId).block();
   }
 }

@@ -1,5 +1,6 @@
 package ee.aleksale.releaseapp.ui.components;
 
+import ee.aleksale.releaseapp.event.PipelineUpdateEvent;
 import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.model.dto.Release;
@@ -65,7 +66,12 @@ public class ReleasesTable {
   }
 
   @EventListener
-  public void onReleaseSaved(ReleaseSavedEvent event) {
+  private void onReleaseSaved(ReleaseSavedEvent event) {
+    Platform.runLater(() -> refreshTable(event.getRelease().getReleaseDate()));
+  }
+
+  @EventListener
+  private void onPipelineUpdate(PipelineUpdateEvent event) {
     Platform.runLater(() -> refreshTable(event.getRelease().getReleaseDate()));
   }
 

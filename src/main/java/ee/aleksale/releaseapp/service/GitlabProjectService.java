@@ -1,5 +1,6 @@
 package ee.aleksale.releaseapp.service;
 
+import ee.aleksale.releaseapp.model.domain.GitlabProjectEntity;
 import ee.aleksale.releaseapp.model.dto.GitlabProject;
 import ee.aleksale.releaseapp.model.mapper.GitlabProjectMapper;
 import ee.aleksale.releaseapp.repository.GitlabProjectRepository;
@@ -56,6 +57,12 @@ public class GitlabProjectService {
             .webUrl(v.getWebUrl())
             .build())
         .collect(Collectors.toList());
+  }
+
+  public Long resolveProjectId(String projectName) {
+    return gitlabProjectRepository.findByName(projectName)
+            .map(GitlabProjectEntity::getGitlabProjectId)
+            .orElse(null);
   }
 
 }

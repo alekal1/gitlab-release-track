@@ -44,6 +44,12 @@ public class ReleaseService {
     releaseRepository.deleteById(event.getRelease().getId());
   }
 
+  public List<Release> findPendingOrRunning() {
+    return releaseRepository.findByPipelineStatusIn(List.of(PipelineStatus.PENDING, PipelineStatus.RUNNING)).stream()
+            .map(ReleaseMapper.INSTANCE::toRelease)
+            .collect(Collectors.toList());
+  }
+
 
   public Set<LocalDate> getReleaseDates() {
     return releaseRepository.findDistinctReleaseDates();
@@ -53,5 +59,11 @@ public class ReleaseService {
     return releaseRepository.findByReleaseDateOrderByCreatedAtDesc(date).stream()
             .map(ReleaseMapper.INSTANCE::toRelease)
             .collect(Collectors.toList());
+  }
+
+  @Transactional
+  public void updateRelease(Release release) {
+    final var entity = ReleaseMapper.INSTANCE.toReleaseEntity(release);
+    releaseRepository.saveAndFlush(entity);
   }
 }

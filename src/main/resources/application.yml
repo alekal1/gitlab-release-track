@@ -16,3 +16,4 @@ spring:
 gitlab:
   base-url: ${GITLAB_BASE_URL}
   token: ${GITLAB_TOKEN}
+  last-step: ${GITLAB_PIPELINE_LAST_STEP}

@@ -183,7 +183,7 @@ public class ReleaseForm {
     hashField.clear();
 
     AsyncUtils.platformRunLater(
-            () -> gitlabTagsService.loadTagsForProject(selectedProject.getGitlabProjectId()),
+            () -> gitlabTagsService.getTagsForProject(selectedProject.getGitlabProjectId()),
             tags -> {
               if (tags == null || tags.isEmpty()) {
                 return;

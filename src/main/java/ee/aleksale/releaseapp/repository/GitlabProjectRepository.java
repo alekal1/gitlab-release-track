@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface GitlabProjectRepository extends JpaRepository<GitlabProjectEntity, Long> {
 
+  Optional<GitlabProjectEntity> findByName(String name);
   Collection<GitlabProjectEntity> findAllByOrderByNameAsc();
   Optional<GitlabProjectEntity> findByGitlabProjectId(Long gitlabProjectId);
 

@@ -13,5 +13,5 @@ public class GitlabConfig {
 
   private String baseUrl;
   private String token;
-
+  private String lastStep;
 }
