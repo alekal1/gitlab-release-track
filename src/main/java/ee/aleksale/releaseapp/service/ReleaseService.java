@@ -5,6 +5,7 @@ import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.model.mapper.ReleaseMapper;
+import ee.aleksale.releaseapp.repository.GitlabProjectRepository;
 import ee.aleksale.releaseapp.repository.ReleaseRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,13 @@ import java.util.stream.Collectors;
 public class ReleaseService {
 
   private final ReleaseRepository releaseRepository;
+  private final GitlabProjectRepository gitlabProjectRepository;
 
   @Transactional
   @EventListener
   public void onReleaseSaved(ReleaseSavedEvent event) {
     var release = event.getRelease();
-    if (releaseRepository.existsByGitlabProjectNameAndVersion(release.getGitlabProjectName(), release.getVersion())) {
+    if (releaseRepository.existsByGitlabProjectNameAndVersionAndReleaseDate(release.getGitlabProjectName(), release.getVersion(), release.getReleaseDate())) {
       return;
     }
 
@@ -58,6 +60,8 @@ public class ReleaseService {
   public List<Release> getReleasesByDateAndService(LocalDate date) {
     return releaseRepository.findByReleaseDateOrderByCreatedAtDesc(date).stream()
             .map(ReleaseMapper.INSTANCE::toRelease)
+            .peek(release -> gitlabProjectRepository.findByName(release.getGitlabProjectName())
+                    .ifPresent(project -> release.setGitlabProjectWebUrl(project.getWebUrl())))
             .collect(Collectors.toList());
   }
 

@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -188,10 +189,12 @@ public class ReleaseForm {
               if (tags == null || tags.isEmpty()) {
                 return;
               }
+              var tagNames = new ArrayList<String>();
               for (var t : tags) {
                 tagHashMap.put(t.getName(), t.getCommit().getId());
-                versionCombo.getItems().add(t.getName());
+                tagNames.add(t.getName());
               }
+              versionCombo.getItems().setAll(tagNames);
             }
     );
   }
@@ -221,7 +224,7 @@ public class ReleaseForm {
             .gitlabProjectName(project.getName())
             .version(version)
             .gitHash(hashField.getText().trim())
-            .pipelineType(PipelineType.UNSET)
+            .pipelineType(PipelineType.UNKNOWN)
             .pipelineStatus(PipelineStatus.PENDING)
             .notes(notesField.getText().trim())
             .releaseDate(getSelectedDate())
@@ -258,12 +261,12 @@ public class ReleaseForm {
 
   private void addAndSelectProject(GitlabProject project) {
     var saved = gitlabProjectService.saveProject(project);
+    serviceCombo.setValue(null);
     refreshProjectCombo(serviceCombo);
     serviceCombo.getItems().stream()
             .filter(p -> p.getGitlabProjectId().equals(saved.getGitlabProjectId()))
             .findFirst()
             .ifPresent(serviceCombo::setValue);
-    loadTags(serviceCombo.getValue());
   }
 
   private void refreshProjectCombo(ComboBox<GitlabProject> combo) {

@@ -17,7 +17,7 @@ public interface ReleaseRepository extends JpaRepository<ReleaseEntity, Long> {
 
   List<ReleaseEntity> findByReleaseDateOrderByCreatedAtDesc(LocalDate releaseDate);
 
-  boolean existsByGitlabProjectNameAndVersion(String gitlabProjectName, String version);
+  boolean existsByGitlabProjectNameAndVersionAndReleaseDate(String gitlabProjectName, String version, LocalDate releaseDate);
 
   List<ReleaseEntity> findByPipelineStatusIn(Collection<PipelineStatus> pipelineStatuses);
 }

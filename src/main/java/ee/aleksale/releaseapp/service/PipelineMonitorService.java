@@ -68,7 +68,7 @@ public class PipelineMonitorService {
     AsyncUtils.platformRunLater(
             () -> gitlabPipelineService.getPipelineJobs(gitlabProjectId, release.getPipelineId()),
             jobs -> {
-              var type = PipelineType.UNSET;
+              var type = PipelineType.UNKNOWN;
 
               for (var job : jobs) {
                 if (gitlabConfig.getLastStep().equals(job.getName())) {

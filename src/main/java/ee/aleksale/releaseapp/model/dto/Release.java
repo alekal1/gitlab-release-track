@@ -24,6 +24,7 @@ public class Release {
   private PipelineStatus pipelineStatus;
   private Long pipelineId;
   private String notes;
+  private String gitlabProjectWebUrl;
   private LocalDateTime createdAt;
   private LocalDate releaseDate;
 }

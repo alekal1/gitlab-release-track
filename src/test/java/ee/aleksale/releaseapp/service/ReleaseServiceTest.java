@@ -14,6 +14,7 @@ import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.common.PipelineType;
 import ee.aleksale.releaseapp.model.domain.ReleaseEntity;
 import ee.aleksale.releaseapp.model.dto.Release;
+import ee.aleksale.releaseapp.repository.GitlabProjectRepository;
 import ee.aleksale.releaseapp.repository.ReleaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +37,7 @@ class ReleaseServiceTest {
   @BeforeEach
   void init() {
     releaseRepository = mock(ReleaseRepository.class);
-    releaseService = new ReleaseService(releaseRepository);
+    releaseService = new ReleaseService(releaseRepository, mock(GitlabProjectRepository.class));
   }
 
   @Test
@@ -44,12 +45,13 @@ class ReleaseServiceTest {
     final var release = Release.builder()
         .gitlabProjectName("my-project")
         .version("1.0.0")
+        .releaseDate(LocalDate.of(2026, 1, 1))
         .pipelineStatus(PipelineStatus.PENDING)
         .build();
 
     doReturn(true)
         .when(releaseRepository)
-        .existsByGitlabProjectNameAndVersion("my-project", "1.0.0");
+        .existsByGitlabProjectNameAndVersionAndReleaseDate("my-project", "1.0.0", LocalDate.of(2026, 1, 1));
 
     releaseService.onReleaseSaved(new ReleaseSavedEvent(this, release));
 
@@ -67,7 +69,7 @@ class ReleaseServiceTest {
 
     doReturn(false)
         .when(releaseRepository)
-        .existsByGitlabProjectNameAndVersion("my-project", "2.0.0");
+        .existsByGitlabProjectNameAndVersionAndReleaseDate("my-project", "2.0.0", null);
 
     releaseService.onReleaseSaved(new ReleaseSavedEvent(this, release));
 
@@ -89,7 +91,7 @@ class ReleaseServiceTest {
 
     doReturn(false)
         .when(releaseRepository)
-        .existsByGitlabProjectNameAndVersion("my-project", "3.0.0");
+        .existsByGitlabProjectNameAndVersionAndReleaseDate("my-project", "3.0.0", null);
 
     releaseService.onReleaseSaved(new ReleaseSavedEvent(this, release));
 

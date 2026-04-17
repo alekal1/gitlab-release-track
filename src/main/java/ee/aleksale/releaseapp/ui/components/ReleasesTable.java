@@ -1,5 +1,7 @@
 package ee.aleksale.releaseapp.ui.components;
 
+import static java.awt.Desktop.getDesktop;
+
 import ee.aleksale.releaseapp.event.PipelineUpdateEvent;
 import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
@@ -22,12 +24,15 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.time.LocalDate;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class ReleasesTable {
@@ -53,10 +58,11 @@ public class ReleasesTable {
             createProjectColumn(),
             createVersionColumn(),
             createHashColumn(),
-            createPipelineColumn(),
+            createPipelineActionColumn(),
             createStatusColumn(),
             createNotesColumn(),
             createDateColumn(),
+            openCommitButtonColumn(),
             deleteButtonColumn()
     );
   }
@@ -94,13 +100,13 @@ public class ReleasesTable {
       var display = hash != null && hash.length() > GIT_HASH_DISPLAY_LENGTH
               ? hash.substring(0, GIT_HASH_DISPLAY_LENGTH)
               : hash;
-      return new SimpleStringProperty(display);
+      return new SimpleStringProperty(hash);
     });
     return col;
   }
 
-  private TableColumn<Release, String> createPipelineColumn() {
-    var col = new TableColumn<Release, String>("Pipeline");
+  private TableColumn<Release, String> createPipelineActionColumn() {
+    var col = new TableColumn<Release, String>("Pipeline action");
     col.setCellValueFactory(c -> new SimpleStringProperty(c.getValue().getPipelineType().name()));
     return col;
   }
@@ -143,6 +149,34 @@ public class ReleasesTable {
     return col;
   }
 
+  private TableColumn<Release, Void> openCommitButtonColumn() {
+    var col = new TableColumn<Release, Void>("");
+    col.setPrefWidth(40);
+    col.setMinWidth(40);
+    col.setMaxWidth(40);
+    col.setCellFactory(c -> new TableCell<>() {
+      private final Button btn = new Button("🔗");
+      {
+        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #90caf9; -fx-cursor: hand; -fx-font-size: 11;");
+        btn.setTooltip(new Tooltip("Open commit in GitLab"));
+        btn.setOnAction(e -> {
+          Release release = getTableView().getItems().get(getIndex());
+          String webUrl = release.getGitlabProjectWebUrl();
+          String hash = release.getGitHash();
+          if (webUrl != null && hash != null) {
+            openInBrowser(webUrl + "/-/commit/" + hash);
+          }
+        });
+      }
+      @Override
+      protected void updateItem(Void item, boolean empty) {
+        super.updateItem(item, empty);
+        setGraphic(empty ? null : btn);
+      }
+    });
+    return col;
+  }
+
   private TableColumn<Release, Void> deleteButtonColumn() {
     var col = new TableColumn<Release, Void>("");
     col.setPrefWidth(40);
@@ -174,5 +208,13 @@ public class ReleasesTable {
       }
     });
     return col;
+  }
+
+  private void openInBrowser(String url) {
+    try {
+      getDesktop().browse(new URI(url));
+    } catch (Exception e) {
+      log.error("Failed to open browser for URL: {}", url, e);
+    }
   }
 }
