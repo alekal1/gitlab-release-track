@@ -98,9 +98,6 @@ public class ReleasesTable {
     var col = new TableColumn<Release, String>("Git Hash");
     col.setCellValueFactory(c -> {
       var hash = c.getValue().getGitHash();
-      var display = hash != null && hash.length() > GIT_HASH_DISPLAY_LENGTH
-              ? hash.substring(0, GIT_HASH_DISPLAY_LENGTH)
-              : hash;
       return new SimpleStringProperty(hash);
     });
     return col;
