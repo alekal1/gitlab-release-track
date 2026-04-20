@@ -1,6 +1,7 @@
 package ee.aleksale.releaseapp.ui.components;
 
-import static java.awt.Desktop.getDesktop;
+import static ee.aleksale.releaseapp.utils.BrowserUtils.openInBrowser;
+
 
 import ee.aleksale.releaseapp.event.PipelineUpdateEvent;
 import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
@@ -30,7 +31,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.time.LocalDate;
 
 @Slf4j
@@ -209,11 +209,4 @@ public class ReleasesTable {
     return col;
   }
 
-  private void openInBrowser(String url) {
-    try {
-      getDesktop().browse(new URI(url));
-    } catch (Exception e) {
-      log.error("Failed to open browser for URL: {}", url, e);
-    }
-  }
 }

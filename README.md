@@ -62,9 +62,6 @@ GITLAB_PIPELINE_LAST_STEP=deploy-dev
 ./gradlew bootRun
 ```
 
-On Windows:
-```cmd
-gradlew.bat bootRun
-```
+> **Tip:** Add the project directory to your `PATH` to run `run.sh` / `run.bat` from anywhere.
 
 The application window will open with a dark-themed UI.

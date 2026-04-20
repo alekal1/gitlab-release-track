@@ -136,8 +136,8 @@ public class ReleaseForm {
 
   private ComboBox<String> createVersionCombo() {
     var combo = new ComboBox<String>();
-    combo.setEditable(true);
-    combo.setPromptText("Select tag or type version");
+    combo.setEditable(false);
+    combo.setPromptText("Select tag");
     combo.setMaxWidth(Double.MAX_VALUE);
     combo.valueProperty().addListener((obs, oldVal, newVal) -> {
       if (newVal != null && tagHashMap.containsKey(newVal)) {
