@@ -5,6 +5,7 @@ import static java.awt.Desktop.getDesktop;
 import ee.aleksale.releaseapp.event.PipelineUpdateEvent;
 import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
+import ee.aleksale.releaseapp.event.StatusUpdateEvent;
 import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.utils.AppConstants;
@@ -197,6 +198,8 @@ public class ReleasesTable {
             if (response == ButtonType.YES) {
               Platform.runLater(() -> refreshTable(release.getReleaseDate()));
               eventPublisher.publishEvent(new ReleaseDeletedEvent(this, release));
+              eventPublisher.publishEvent(new StatusUpdateEvent(this, "Deleted: "
+                      + release.getGitlabProjectName() + " " + release.getVersion()));
             }
           });
         });

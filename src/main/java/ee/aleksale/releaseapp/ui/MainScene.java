@@ -4,6 +4,7 @@ import ee.aleksale.releaseapp.ui.components.ReleaseDatePicker;
 import ee.aleksale.releaseapp.ui.components.ReleaseForm;
 import ee.aleksale.releaseapp.ui.components.ReleaseTopBox;
 import ee.aleksale.releaseapp.ui.components.ReleasesTable;
+import ee.aleksale.releaseapp.ui.components.StatusLabel;
 import javafx.scene.Parent;
 import javafx.scene.layout.BorderPane;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class MainScene {
   private final ReleaseTopBox releaseTopBox;
   private final ReleasesTable releasesTable;
   private final ReleaseForm releaseForm;
+  private final StatusLabel statusLabel;
 
   public Parent build() {
     var root = new BorderPane();
@@ -28,6 +30,7 @@ public class MainScene {
     root.setTop(releaseTopBox.getTop());
     root.setCenter(releasesTable.getTable());
     root.setRight(releaseForm.getForm());
+    root.setBottom(statusLabel.getStatusLabel());
 
     releasesTable.refreshTable(releaseDatePicker.getDatePicker().getValue());
 

@@ -2,6 +2,8 @@
 
 # Release Management Desktop App
 
+![img.png](app.png)
+
 ## Motivation
 
 As a developer managing releases for multiple services, I was tracking release processes manually in a notepad — service names, versions, git hashes, pipeline statuses, and deploy steps. This became error-prone and tedious, especially on days when 10+ services needed to be released.

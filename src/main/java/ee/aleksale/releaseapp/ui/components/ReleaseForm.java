@@ -1,6 +1,7 @@
 package ee.aleksale.releaseapp.ui.components;
 
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
+import ee.aleksale.releaseapp.event.StatusUpdateEvent;
 import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.common.PipelineType;
 import ee.aleksale.releaseapp.model.dto.GitlabProject;
@@ -174,8 +175,11 @@ public class ReleaseForm {
 
   private void loadTags(GitlabProject selectedProject) {
     if (selectedProject == null) {
+      eventPublisher.publishEvent(new StatusUpdateEvent(this, "Select a project first."));
       return;
     }
+
+    eventPublisher.publishEvent(new StatusUpdateEvent(this, "Loading tags for " + selectedProject.getName() + "..."));
 
     tagHashMap.clear();
     versionCombo.getItems().clear();
@@ -187,6 +191,7 @@ public class ReleaseForm {
             () -> gitlabTagsService.getTagsForProject(selectedProject.getGitlabProjectId()),
             tags -> {
               if (tags == null || tags.isEmpty()) {
+                eventPublisher.publishEvent(new StatusUpdateEvent(this, "No tags found for " + selectedProject.getName()));
                 return;
               }
               var tagNames = new ArrayList<String>();
@@ -194,6 +199,8 @@ public class ReleaseForm {
                 tagHashMap.put(t.getName(), t.getCommit().getId());
                 tagNames.add(t.getName());
               }
+
+              eventPublisher.publishEvent(new StatusUpdateEvent( this, "Loaded " + tags.size() + " tags for " + selectedProject.getName()));
               versionCombo.getItems().setAll(tagNames);
             }
     );
@@ -203,6 +210,9 @@ public class ReleaseForm {
     if (StringUtils.isBlank(query)) {
       return;
     }
+
+    eventPublisher.publishEvent(new StatusUpdateEvent(this, "Searching GitLab for '" + query + "'..."));
+
     AsyncUtils.platformRunLater(
             () -> gitlabProjectService.searchProject(query),
             this::showSearchResults
@@ -231,10 +241,13 @@ public class ReleaseForm {
             .build();
     clearForm();
     eventPublisher.publishEvent(new ReleaseSavedEvent(this, release));
+    eventPublisher.publishEvent(new StatusUpdateEvent(this,
+            String.format("Release saved: %s %s for %s", project.getName(), version, getSelectedDate())));
   }
 
   private void showSearchResults(List<GitlabProject> results) {
     if (results.isEmpty()) {
+      eventPublisher.publishEvent(new StatusUpdateEvent(this, "No projects found"));
       return;
     }
 
@@ -267,6 +280,7 @@ public class ReleaseForm {
             .filter(p -> p.getGitlabProjectId().equals(saved.getGitlabProjectId()))
             .findFirst()
             .ifPresent(serviceCombo::setValue);
+    eventPublisher.publishEvent(new StatusUpdateEvent(this, "Added project: " + saved.getName()));
   }
 
   private void refreshProjectCombo(ComboBox<GitlabProject> combo) {
