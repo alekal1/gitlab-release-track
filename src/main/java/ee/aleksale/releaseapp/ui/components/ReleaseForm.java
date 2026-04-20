@@ -87,7 +87,7 @@ public class ReleaseForm {
 
   private Label createTitle() {
     var title = new Label("New Release");
-    title.setStyle("-fx-font-size: 16; -fx-font-weight: bold;");
+    title.getStyleClass().add("form-title");
     return title;
   }
 

@@ -116,12 +116,13 @@ public class ReleasesTable {
       protected void updateItem(String item, boolean empty) {
         super.updateItem(item, empty);
         setText(empty ? null : item);
+        getStyleClass().removeAll("status-success", "status-failed", "status-running", "status-default");
         if (!empty && item != null) {
-          setStyle(switch (item) {
-            case AppConstants.PIPELINE_STATUS_SUCCESS -> "-fx-text-fill: #4caf50;";
-            case AppConstants.PIPELINE_STATUS_FAILED -> "-fx-text-fill: #f44336;";
-            case AppConstants.PIPELINE_STATUS_RUNNING -> "-fx-text-fill: #ff9800;";
-            default -> "-fx-text-fill: #90caf9;";
+          getStyleClass().add(switch (item) {
+            case AppConstants.PIPELINE_STATUS_SUCCESS -> "status-success";
+            case AppConstants.PIPELINE_STATUS_FAILED -> "status-failed";
+            case AppConstants.PIPELINE_STATUS_RUNNING -> "status-running";
+            default -> "status-default";
           });
         } else {
           setStyle("");
@@ -153,7 +154,7 @@ public class ReleasesTable {
     col.setCellFactory(c -> new TableCell<>() {
       private final Button btn = new Button("🔗");
       {
-        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #90caf9; -fx-cursor: hand; -fx-font-size: 11;");
+        btn.getStyleClass().addAll("icon-button", "icon-button-link");
         btn.setTooltip(new Tooltip("Open commit in GitLab"));
         btn.setOnAction(e -> {
           Release release = getTableView().getItems().get(getIndex());
@@ -181,7 +182,7 @@ public class ReleasesTable {
     col.setCellFactory(c -> new TableCell<>() {
       private final Button btn = new Button(AppConstants.DELETE_ICON);
       {
-        btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #f44336; -fx-cursor: hand; -fx-font-size: 11;");
+        btn.getStyleClass().addAll("icon-button", "icon-button-danger");
         btn.setTooltip(new Tooltip("Delete release"));
         btn.setOnAction(e -> {
           Release release = getTableView().getItems().get(getIndex());

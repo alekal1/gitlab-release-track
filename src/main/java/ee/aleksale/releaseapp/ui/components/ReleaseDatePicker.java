@@ -45,7 +45,7 @@ public class ReleaseDatePicker {
       public void updateItem(LocalDate date, boolean empty) {
         super.updateItem(date, empty);
         if (!empty && date != null && datesWithReleases.contains(date)) {
-          setStyle("-fx-background-color: #1976d2; -fx-text-fill: white; -fx-font-weight: bold;");
+          getStyleClass().add("highlighted-date-cell");
           setTooltip(new Tooltip("Has releases"));
         }
       }
