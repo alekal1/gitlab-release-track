@@ -4,7 +4,6 @@ import jakarta.annotation.PostConstruct;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
@@ -26,9 +25,6 @@ public class ReleaseTopBox {
 
   @PostConstruct
   void initTop() {
-    var exportMdBtn = new Button("Export Markdown");
-    // TODO: Export markdown functionality
-
     releaseDatePicker
             .getDatePicker()
             .valueProperty()
@@ -38,8 +34,7 @@ public class ReleaseTopBox {
 
     top = new HBox(10,
             new Label("Release Day:"), releaseDatePicker.getDatePicker(),
-            new Separator(Orientation.VERTICAL),
-            exportMdBtn);
+            new Separator(Orientation.VERTICAL));
     top.setAlignment(Pos.CENTER_LEFT);
     top.setPadding(new Insets(10));
   }

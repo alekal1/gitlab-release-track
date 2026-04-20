@@ -38,8 +38,6 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class ReleasesTable {
 
-  private static final int GIT_HASH_DISPLAY_LENGTH = 8;
-
   private ObservableList<Release> releaseData;
   @Getter
   private TableView<Release> table;
@@ -69,7 +67,7 @@ public class ReleasesTable {
   }
 
   public void refreshTable(LocalDate date) {
-    releaseData.setAll(releaseService.getReleasesByDateAndService(date));
+    releaseData.setAll(releaseService.getReleasesByDate(date));
   }
 
   @EventListener

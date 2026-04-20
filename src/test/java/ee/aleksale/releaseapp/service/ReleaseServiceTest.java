@@ -122,7 +122,7 @@ class ReleaseServiceTest {
   }
 
   @Test
-  void shouldReturnMappedReleases_whenGetReleasesByDateAndService() {
+  void shouldReturnMappedReleases_whenGetReleasesByDate() {
     final var date = LocalDate.of(2026, 4, 17);
     final var entity = ReleaseEntity.builder()
         .id(1L)
@@ -138,7 +138,7 @@ class ReleaseServiceTest {
         .when(releaseRepository)
         .findByReleaseDateOrderByCreatedAtDesc(date);
 
-    final var result = releaseService.getReleasesByDateAndService(date);
+    final var result = releaseService.getReleasesByDate(date);
 
     assertEquals(1, result.size());
     assertEquals("my-project", result.getFirst().getGitlabProjectName());
@@ -152,7 +152,7 @@ class ReleaseServiceTest {
         .when(releaseRepository)
         .findByReleaseDateOrderByCreatedAtDesc(date);
 
-    final var result = releaseService.getReleasesByDateAndService(date);
+    final var result = releaseService.getReleasesByDate(date);
 
     assertTrue(result.isEmpty());
   }

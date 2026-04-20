@@ -57,7 +57,7 @@ public class ReleaseService {
     return releaseRepository.findDistinctReleaseDates();
   }
 
-  public List<Release> getReleasesByDateAndService(LocalDate date) {
+  public List<Release> getReleasesByDate(LocalDate date) {
     return releaseRepository.findByReleaseDateOrderByCreatedAtDesc(date).stream()
             .map(ReleaseMapper.INSTANCE::toRelease)
             .peek(release -> gitlabProjectRepository.findByName(release.getGitlabProjectName())
