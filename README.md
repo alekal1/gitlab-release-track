@@ -35,7 +35,7 @@ This desktop application replaces that manual workflow with a structured, day-ba
 
 ```bash
 git clone <repo-url>
-cd releaseapp
+cd <repo-folder>
 ```
 
 ### 2. Create the `.env` file
