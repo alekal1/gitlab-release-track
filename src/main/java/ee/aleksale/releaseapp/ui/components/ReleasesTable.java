@@ -8,6 +8,7 @@ import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.event.StatusUpdateEvent;
 import ee.aleksale.releaseapp.model.dto.Release;
+import ee.aleksale.releaseapp.service.PipelineMonitorService;
 import ee.aleksale.releaseapp.service.ReleaseService;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import ee.aleksale.releaseapp.utils.DateUtils;
@@ -44,6 +45,7 @@ public class ReleasesTable {
 
   private final ReleaseService releaseService;
   private final ApplicationEventPublisher eventPublisher;
+  private final PipelineMonitorService pipelineMonitorService;
 
 
   @SuppressWarnings("unchecked")
@@ -62,6 +64,7 @@ public class ReleasesTable {
             createNotesColumn(),
             createDateColumn(),
             openCommitButtonColumn(),
+            refreshPipelineButtonColumn(),
             deleteButtonColumn()
     );
   }
@@ -163,6 +166,32 @@ public class ReleasesTable {
           if (webUrl != null && hash != null) {
             openInBrowser(webUrl + "/-/commit/" + hash);
           }
+        });
+      }
+      @Override
+      protected void updateItem(Void item, boolean empty) {
+        super.updateItem(item, empty);
+        setGraphic(empty ? null : btn);
+      }
+    });
+    return col;
+  }
+
+  private TableColumn<Release, Void> refreshPipelineButtonColumn() {
+    var col = new TableColumn<Release, Void>("");
+    col.setPrefWidth(40);
+    col.setMinWidth(40);
+    col.setMaxWidth(40);
+    col.setCellFactory(c -> new TableCell<>() {
+      private final Button btn = new Button(AppConstants.REFRESH_ICON);
+      {
+        btn.getStyleClass().addAll("icon-button");
+        btn.setTooltip(new Tooltip("Re-check pipeline status"));
+        btn.setOnAction(e -> {
+          Release release = getTableView().getItems().get(getIndex());
+          pipelineMonitorService.checkReleasePipeline(release);
+          eventPublisher.publishEvent(new StatusUpdateEvent(this,
+                  "Refreshing pipeline for: " + release.getGitlabProjectName() + " " + release.getVersion()));
         });
       }
       @Override

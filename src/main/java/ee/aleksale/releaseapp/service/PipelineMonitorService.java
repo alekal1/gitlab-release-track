@@ -35,7 +35,7 @@ public class PipelineMonitorService {
     }
   }
 
-  private void checkReleasePipeline(Release release) {
+  public void checkReleasePipeline(Release release) {
     final var projectId = gitlabProjectService.resolveProjectId(release.getGitlabProjectName());
     AsyncUtils.platformRunLater(
             () -> gitlabPipelineService.getPipelines(projectId, release.getVersion()),
