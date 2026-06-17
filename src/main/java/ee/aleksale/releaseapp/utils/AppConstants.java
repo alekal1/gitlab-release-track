@@ -20,8 +20,4 @@ public class AppConstants {
   public static final String REFRESH_ICON = "↻";
   public static final String DELETE_ICON = "✖";
   public static final String REFRESH_TOOLTIP = "Refresh tags from GitLab";
-
-  public static final String PIPELINE_STATUS_SUCCESS = "SUCCESS";
-  public static final String PIPELINE_STATUS_FAILED = "FAILED";
-  public static final String PIPELINE_STATUS_RUNNING = "RUNNING";
 }

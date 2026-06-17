@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,10 +43,12 @@ public class ReleaseEntity {
 
   private String gitHash;
 
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private PipelineType pipelineType;
 
+  @JdbcTypeCode(SqlTypes.VARCHAR)
   @Enumerated(EnumType.STRING)
   private PipelineStatus pipelineStatus;
 

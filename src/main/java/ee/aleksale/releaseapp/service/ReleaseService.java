@@ -70,4 +70,10 @@ public class ReleaseService {
     final var entity = ReleaseMapper.INSTANCE.toReleaseEntity(release);
     releaseRepository.saveAndFlush(entity);
   }
+
+  @Transactional
+  public void updatePipelineStatus(Release release, PipelineStatus pipelineStatus) {
+    release.setPipelineStatus(pipelineStatus);
+    updateRelease(release);
+  }
 }

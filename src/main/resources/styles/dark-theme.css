@@ -118,6 +118,30 @@
     -fx-text-fill: #f44336;
 }
 
+.context-menu {
+    -fx-background-color: #313335;
+    -fx-border-color: #555555;
+    -fx-border-width: 1;
+}
+
+.context-menu .menu-item {
+    -fx-background-color: transparent;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: #d0d0d0;
+}
+
+.context-menu .menu-item:focused,
+.context-menu .menu-item:hover {
+    -fx-background-color: #37474f;
+}
+
+.context-menu .menu-item:focused .label,
+.context-menu .menu-item:hover .label {
+    -fx-text-fill: #ffffff;
+}
+
 .highlighted-date-cell {
     -fx-background-color: #1976d2;
     -fx-text-fill: white;

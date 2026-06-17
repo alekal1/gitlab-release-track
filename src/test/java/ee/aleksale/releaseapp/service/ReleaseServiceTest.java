@@ -156,4 +156,21 @@ class ReleaseServiceTest {
 
     assertTrue(result.isEmpty());
   }
+
+  @Test
+  void shouldUpdateManualSuccessStatusAndPublishEvent() {
+    final var release = Release.builder()
+        .id(10L)
+        .gitlabProjectName("my-project")
+        .version("1.0.1")
+        .pipelineType(PipelineType.UNKNOWN)
+        .pipelineStatus(PipelineStatus.FAILED)
+        .releaseDate(LocalDate.of(2026, 6, 16))
+        .build();
+
+    releaseService.updatePipelineStatus(release, PipelineStatus.MANUALLY_SUCCESS);
+
+    assertEquals(PipelineStatus.MANUALLY_SUCCESS, release.getPipelineStatus());
+    verify(releaseRepository).saveAndFlush(any(ReleaseEntity.class));
+  }
 }

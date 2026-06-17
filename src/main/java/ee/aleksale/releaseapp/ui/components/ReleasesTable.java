@@ -7,6 +7,7 @@ import ee.aleksale.releaseapp.event.PipelineUpdateEvent;
 import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
 import ee.aleksale.releaseapp.event.StatusUpdateEvent;
+import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.service.PipelineMonitorService;
 import ee.aleksale.releaseapp.service.ReleaseService;
@@ -14,14 +15,18 @@ import ee.aleksale.releaseapp.utils.AppConstants;
 import ee.aleksale.releaseapp.utils.DateUtils;
 import jakarta.annotation.PostConstruct;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -55,14 +60,15 @@ public class ReleasesTable {
     table = new TableView<>();
     table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
     table.setItems(releaseData);
+    table.setRowFactory(ignored -> createReleaseRow());
     table.getColumns().addAll(
             createProjectColumn(),
             createVersionColumn(),
             createHashColumn(),
             createPipelineActionColumn(),
             createStatusColumn(),
-            createNotesColumn(),
             createDateColumn(),
+            createNotesColumn(),
             openCommitButtonColumn(),
             refreshPipelineButtonColumn(),
             deleteButtonColumn()
@@ -121,10 +127,18 @@ public class ReleasesTable {
         setText(empty ? null : item);
         getStyleClass().removeAll("status-success", "status-failed", "status-running", "status-default");
         if (!empty && item != null) {
-          getStyleClass().add(switch (item) {
-            case AppConstants.PIPELINE_STATUS_SUCCESS -> "status-success";
-            case AppConstants.PIPELINE_STATUS_FAILED -> "status-failed";
-            case AppConstants.PIPELINE_STATUS_RUNNING -> "status-running";
+          var release = getTableRow() != null ? getTableRow().getItem() : null;
+          var pipelineStatus = release != null ? release.getPipelineStatus() : null;
+
+          if (pipelineStatus == null) {
+            setStyle("");
+            return;
+          }
+
+          getStyleClass().add(switch (pipelineStatus) {
+            case SUCCESS -> "status-success";
+            case FAILED -> "status-failed";
+            case RUNNING, MANUALLY_SUCCESS -> "status-running";
             default -> "status-default";
           });
         } else {
@@ -236,6 +250,36 @@ public class ReleasesTable {
       }
     });
     return col;
+  }
+
+  private TableRow<Release> createReleaseRow() {
+    var row = new TableRow<Release>();
+    row.setOnContextMenuRequested(event -> {
+      if (!row.isEmpty()) {
+        table.getSelectionModel().select(row.getItem());
+      }
+    });
+
+    var markManuallySuccessful = new MenuItem("Set status to MANUALLY SUCCESS");
+    markManuallySuccessful.setOnAction(event -> {
+      var release = row.getItem();
+      if (release == null) {
+        return;
+      }
+
+      releaseService.updatePipelineStatus(release, PipelineStatus.MANUALLY_SUCCESS);
+      eventPublisher.publishEvent(new StatusUpdateEvent(this,
+              "Set manually successful: " + release.getGitlabProjectName() + " " + release.getVersion()));
+      eventPublisher.publishEvent(new PipelineUpdateEvent(this, release));
+    });
+
+    var contextMenu = new ContextMenu(markManuallySuccessful);
+    row.contextMenuProperty().bind(
+            Bindings.when(row.emptyProperty())
+                    .then((ContextMenu) null)
+                    .otherwise(contextMenu)
+    );
+    return row;
   }
 
 }
