@@ -55,9 +55,10 @@ public class JiraApiService extends ExternalService {
       return Mono.just(new JiraIssuesResponse());
     }
 
-    final var url = "/board/" + board.get().getId() + "/issue?jql=status%20in%20(\"" + jiraConfig.getIssueStatus().replace(" ", "%20") + "\")";
+    final var boardId = board.get().getId();
+    final var jql = "status in (\"" + jiraConfig.getIssueStatus() + "\")";
 
-    return get(url)
+    return get("/board/" + boardId + "/issue?jql=" + jql)
             .retrieve()
             .bodyToMono(JiraIssuesResponse.class)
             .doOnError(e -> log.error("Failed to search jira issues", e));
