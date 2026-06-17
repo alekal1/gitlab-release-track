@@ -1,6 +1,6 @@
 package ee.aleksale.releaseapp.service;
 
-import ee.aleksale.releaseapp.model.dto.response.GitlabFetchTagsResponse;
+import ee.aleksale.releaseapp.model.dto.response.gitlab.GitlabFetchTagsResponse;
 import ee.aleksale.releaseapp.service.external.GitlabApiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

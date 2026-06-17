@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
-import ee.aleksale.releaseapp.model.dto.response.GitlabPipelineJobResponse;
-import ee.aleksale.releaseapp.model.dto.response.GitlabPipelineResponse;
+import ee.aleksale.releaseapp.model.dto.response.gitlab.GitlabPipelineJobResponse;
+import ee.aleksale.releaseapp.model.dto.response.gitlab.GitlabPipelineResponse;
 import ee.aleksale.releaseapp.service.external.GitlabApiService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

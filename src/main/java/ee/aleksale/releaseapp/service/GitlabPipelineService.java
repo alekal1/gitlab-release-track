@@ -1,7 +1,7 @@
 package ee.aleksale.releaseapp.service;
 
-import ee.aleksale.releaseapp.model.dto.response.GitlabPipelineJobResponse;
-import ee.aleksale.releaseapp.model.dto.response.GitlabPipelineResponse;
+import ee.aleksale.releaseapp.model.dto.response.gitlab.GitlabPipelineJobResponse;
+import ee.aleksale.releaseapp.model.dto.response.gitlab.GitlabPipelineResponse;
 import ee.aleksale.releaseapp.service.external.GitlabApiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

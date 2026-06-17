@@ -17,3 +17,9 @@ gitlab:
   base-url: ${GITLAB_BASE_URL}
   token: ${GITLAB_TOKEN}
   last-step: ${GITLAB_PIPELINE_LAST_STEP}
+
+jira:
+  base-url: ${JIRA_BASE_URL}
+  token: ${JIRA_TOKEN}
+  board-name: ${JIRA_BOARD_NAME}
+  issue-status: ${JIRA_ISSUE_STATUS}
