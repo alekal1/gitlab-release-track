@@ -68,7 +68,7 @@ public class ReleasesTable {
             createPipelineActionColumn(),
             createStatusColumn(),
             createDateColumn(),
-            createNotesColumn(),
+            createIssuesColumn(),
             openCommitButtonColumn(),
             refreshPipelineButtonColumn(),
             deleteButtonColumn()
@@ -149,10 +149,27 @@ public class ReleasesTable {
     return col;
   }
 
-  private TableColumn<Release, String> createNotesColumn() {
-    var col = new TableColumn<Release, String>("Notes");
+  private TableColumn<Release, String> createIssuesColumn() {
+    var col = new TableColumn<Release, String>("Issues");
+    col.setPrefWidth(200);
+    col.setMaxWidth(200);
     col.setCellValueFactory(c -> new SimpleStringProperty(
-            c.getValue().getNotes() != null ? c.getValue().getNotes() : ""));
+            c.getValue().getIssues() != null ? c.getValue().getIssues() : ""));
+    col.setCellFactory(ignored -> new TableCell<>() {
+      private final Tooltip tooltip = new Tooltip();
+      @Override
+      protected void updateItem(String item, boolean empty) {
+        super.updateItem(item, empty);
+        if (empty || item == null || item.isBlank()) {
+          setText(null);
+          setTooltip(null);
+        } else {
+          setText(item);
+          tooltip.setText(item);
+          setTooltip(tooltip);
+        }
+      }
+    });
     return col;
   }
 

@@ -6,12 +6,15 @@ import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.common.PipelineType;
 import ee.aleksale.releaseapp.model.dto.GitlabProject;
 import ee.aleksale.releaseapp.model.dto.Release;
+import ee.aleksale.releaseapp.model.dto.response.jira.JiraIssuesResponse;
 import ee.aleksale.releaseapp.service.GitlabProjectService;
 import ee.aleksale.releaseapp.service.GitlabTagsService;
+import ee.aleksale.releaseapp.service.JiraIssuesService;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import ee.aleksale.releaseapp.utils.AsyncUtils;
 import jakarta.annotation.PostConstruct;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -21,6 +24,7 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -39,6 +43,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -51,11 +56,16 @@ public class ReleaseForm {
   private ComboBox<String> versionCombo;
   private final Map<String, String> tagHashMap = new HashMap<>();
   private TextField hashField;
-  private TextField notesField;
+
+  private ComboBox<JiraIssuesResponse.JiraIssue> issueCombo;
+  private ListView<JiraIssuesResponse.JiraIssue> selectedIssuesList;
+  private ObservableList<JiraIssuesResponse.JiraIssue> selectedIssues;
+  private ProgressIndicator issuesLoadingIndicator;
 
   private final ReleaseDatePicker releaseDatePicker;
   private final GitlabTagsService gitlabTagsService;
   private final GitlabProjectService gitlabProjectService;
+  private final JiraIssuesService jiraIssuesService;
   private final ApplicationEventPublisher eventPublisher;
 
   @PostConstruct
@@ -71,18 +81,26 @@ public class ReleaseForm {
             new Label("Project:"), serviceCombo, createSearchBox(), new Separator(),
             new Label("Version / Tag :"), createVersionBox(),
             new Label("Git Hash:"), hashField,
-            new Label("Notes:"), notesField,
+            new Label("Issues:"), createIssuesBox(),
             new Separator(),
             createSaveButton()
     );
+    initIssues();
   }
 
   private void initComponents() {
     serviceCombo = createProjectCombo();
     versionCombo = createVersionCombo();
     hashField = createHashField();
-    notesField = new TextField();
-    notesField.setPromptText("Notes");
+    issueCombo = createIssueCombo();
+
+    selectedIssues = FXCollections.observableArrayList();
+    selectedIssuesList = createSelectedIssuesList();
+
+    issuesLoadingIndicator = new ProgressIndicator();
+    issuesLoadingIndicator.setPrefSize(18, 18);
+    issuesLoadingIndicator.setVisible(false);
+    issuesLoadingIndicator.setManaged(false);
   }
 
   private Label createTitle() {
@@ -149,7 +167,7 @@ public class ReleaseForm {
 
   private HBox createVersionBox() {
     var refreshTagsBtn = new Button(AppConstants.REFRESH_ICON);
-    refreshTagsBtn.setTooltip(new Tooltip(AppConstants.REFRESH_TOOLTIP));
+    refreshTagsBtn.setTooltip(new Tooltip(AppConstants.REFRESH_TAGS_TOOLTIP));
     refreshTagsBtn.setOnAction(e -> loadTags(serviceCombo.getValue()));
 
     var box = new HBox(5, versionCombo, refreshTagsBtn);
@@ -163,6 +181,53 @@ public class ReleaseForm {
     field.setPromptText("Git hash (auto-filled from tag)");
     field.setEditable(false);
     return field;
+  }
+
+  private ComboBox<JiraIssuesResponse.JiraIssue> createIssueCombo() {
+    var combo = new ComboBox<JiraIssuesResponse.JiraIssue>();
+    combo.setMaxWidth(Double.MAX_VALUE);
+    combo.setPromptText("Select Jira issue");
+    combo.setCellFactory(lv -> issueCell());
+    combo.setButtonCell(issueCell());
+    return combo;
+  }
+
+  private ListCell<JiraIssuesResponse.JiraIssue> issueCell() {
+    return new ListCell<>() {
+      @Override
+      protected void updateItem(JiraIssuesResponse.JiraIssue item, boolean empty) {
+        super.updateItem(item, empty);
+        setText(empty || item == null ? null : formatIssue(item));
+      }
+    };
+  }
+
+  private ListView<JiraIssuesResponse.JiraIssue> createSelectedIssuesList() {
+    var listView = new ListView<JiraIssuesResponse.JiraIssue>();
+    listView.setItems(selectedIssues);
+    listView.setCellFactory(lv -> issueCell());
+    listView.setPrefHeight(90);
+    return listView;
+  }
+
+  private VBox createIssuesBox() {
+    var addIssueBtn = new Button(AppConstants.ADD_ICON);
+    addIssueBtn.setOnAction(e -> addSelectedIssue());
+    addIssueBtn.setMinWidth(32);
+    addIssueBtn.setPrefWidth(32);
+
+    var removeIssueBtn = new Button(AppConstants.DELETE_ICON);
+    removeIssueBtn.setOnAction(e -> removeSelectedIssue());
+
+    var refreshIssuesBtn = new Button(AppConstants.REFRESH_ICON);
+    refreshIssuesBtn.setTooltip(new Tooltip(AppConstants.REFRESH_JIRA_TOOLTIP));
+    refreshIssuesBtn.setOnAction(e -> initIssues());
+
+    var pickerRow = new HBox(5, issueCombo, addIssueBtn, refreshIssuesBtn, issuesLoadingIndicator);
+    pickerRow.setAlignment(Pos.CENTER_LEFT);
+    HBox.setHgrow(issueCombo, Priority.ALWAYS);
+
+    return new VBox(5, pickerRow, selectedIssuesList, removeIssueBtn);
   }
 
   private Button createSaveButton() {
@@ -236,7 +301,7 @@ public class ReleaseForm {
             .gitHash(hashField.getText().trim())
             .pipelineType(PipelineType.UNKNOWN)
             .pipelineStatus(PipelineStatus.PENDING)
-            .notes(notesField.getText().trim())
+            .issues(buildIssuesValue())
             .releaseDate(getSelectedDate())
             .build();
     clearForm();
@@ -304,11 +369,80 @@ public class ReleaseForm {
     return versionCombo.getValue() != null ? versionCombo.getValue().trim() : "";
   }
 
+  private void initIssues() {
+    eventPublisher.publishEvent(new StatusUpdateEvent(this, "Loading Jira issues..."));
+    issueCombo.setDisable(true);
+    issueCombo.getItems().clear();
+    issueCombo.setValue(null);
+    toggleIssuesLoading(true);
+
+    AsyncUtils.platformRunLater(jiraIssuesService::getBoardIssuesOnColumn, this::onIssuesLoaded);
+  }
+
+  private void onIssuesLoaded(List<JiraIssuesResponse.JiraIssue> issues) {
+    toggleIssuesLoading(false);
+    issueCombo.setDisable(false);
+
+    if (issues == null || issues.isEmpty()) {
+      eventPublisher.publishEvent(new StatusUpdateEvent(this, "No Jira issues found"));
+      return;
+    }
+
+    issueCombo.getItems().setAll(issues);
+    eventPublisher.publishEvent(new StatusUpdateEvent(this, "Loaded " + issues.size() + " Jira issues"));
+  }
+
+  private void toggleIssuesLoading(boolean loading) {
+    issuesLoadingIndicator.setVisible(loading);
+    issuesLoadingIndicator.setManaged(loading);
+  }
+
+  private void addSelectedIssue() {
+    var issue = issueCombo.getValue();
+    if (issue == null || StringUtils.isBlank(issue.getKey())) {
+      return;
+    }
+
+    var alreadySelected = selectedIssues.stream()
+            .anyMatch(selected -> issue.getKey().equals(selected.getKey()));
+    if (alreadySelected) {
+      return;
+    }
+
+    selectedIssues.add(issue);
+    issueCombo.setValue(null);
+  }
+
+  private void removeSelectedIssue() {
+    var selectedIssue = selectedIssuesList.getSelectionModel().getSelectedItem();
+    if (selectedIssue == null) {
+      return;
+    }
+    selectedIssues.remove(selectedIssue);
+  }
+
+  private String buildIssuesValue() {
+    return selectedIssues.stream()
+            .map(this::formatIssue)
+            .filter(StringUtils::isNotBlank)
+            .distinct()
+            .collect(Collectors.joining(", "));
+  }
+
+  private String formatIssue(JiraIssuesResponse.JiraIssue issue) {
+    if (issue == null || StringUtils.isBlank(issue.getKey())) {
+      return "";
+    }
+    var title = issue.getFields() != null ? StringUtils.defaultString(issue.getFields().getTitle()).trim() : "";
+    return issue.getKey() + ": " + title;
+  }
+
   private void clearForm() {
     versionCombo.setValue(null);
     versionCombo.getEditor().clear();
     hashField.clear();
-    notesField.clear();
+    selectedIssues.clear();
+    selectedIssuesList.getSelectionModel().clearSelection();
   }
 
   private LocalDate getSelectedDate() {

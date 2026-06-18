@@ -22,6 +22,9 @@ public class JiraIssuesResponse {
     private JiraIssueFields fields;
   }
 
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
   public static class JiraIssueFields {
     @JsonProperty(value = "summary")
     private String title;

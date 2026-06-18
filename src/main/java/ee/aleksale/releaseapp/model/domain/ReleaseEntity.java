@@ -54,8 +54,8 @@ public class ReleaseEntity {
 
   private Long pipelineId;
 
-  @Column(length = 2000)
-  private String notes;
+  @Column(name = "notes", length = 2000) //TODO: Fix notes
+  private String issues;
 
   @Column(nullable = false)
   private LocalDate releaseDate;

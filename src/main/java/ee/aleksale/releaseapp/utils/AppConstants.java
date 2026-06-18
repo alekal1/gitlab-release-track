@@ -17,7 +17,9 @@ public class AppConstants {
   public static final int PROJECT_CHOOSE_DIALOG_HEIGHT = 300;
   public static final int PROJECT_CHOOSE_DIALOG_WIDTH = 500;
 
+  public static final String ADD_ICON = "+";
   public static final String REFRESH_ICON = "↻";
   public static final String DELETE_ICON = "✖";
-  public static final String REFRESH_TOOLTIP = "Refresh tags from GitLab";
+  public static final String REFRESH_TAGS_TOOLTIP = "Refresh tags from GitLab";
+  public static final String REFRESH_JIRA_TOOLTIP = "Refresh Jira issues";
 }
