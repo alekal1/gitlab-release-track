@@ -6,9 +6,13 @@
 
 ## Motivation
 
-As a developer managing releases for multiple services, I was tracking release processes manually in a notepad — service names, versions, git hashes, pipeline statuses, and deploy steps. This became error-prone and tedious, especially on days when 10+ services needed to be released.
+As a developer managing releases for multiple services, I was tracking release processes manually in a notepad — service names, versions, git hashes, pipeline statuses, and deploy steps. 
+This became error-prone and tedious, especially on days when 10+ services needed to be released.
 
-This desktop application replaces that manual workflow with a structured, day-based release tracker that integrates directly with GitLab to fetch project tags, commit hashes, and monitor pipeline statuses automatically.
+This desktop application replaces that manual workflow with a structured, day-based release tracker that integrates directly with GitLab
+to fetch project tags, commit hashes, and monitor pipeline statuses automatically.
+
+It also integrates with Jira, allowing release entries to be linked to tickets and issues for improved traceability and release documentation.
 
 ## Technical Stack
 
@@ -46,13 +50,22 @@ Create a `.env` file in the project root directory (**see .env.sample**):
 GITLAB_BASE_URL=https://gitlab.example.com/
 GITLAB_TOKEN=glpat-xxxxxxxxxxxxxxxxxxxx
 GITLAB_PIPELINE_LAST_STEP=deploy-dev
+
+JIRA_URL=https://jira.example.com/
+JIRA_TOKEN=Nzg5xxxxxxxxxxxxxxxxxxxx
+JIRA_BOARD_NAME=MyBoard
+JIRA_ISSUE_STATUS=Waiting for release
 ```
 
-| Variable | Description                                      |
-|----------|--------------------------------------------------|
-| `GITLAB_BASE_URL` | Your GitLab instance URL (no trailing `/api/v4`) |
-| `GITLAB_TOKEN` | Personal access token with `read_api` scope      |
-| `GITLAB_PIPELINE_LAST_STEP` | Tag pipeline last step                           |
+| Variable | Description                                            |
+|----------|--------------------------------------------------------|
+| `GITLAB_BASE_URL` | Your GitLab instance URL (no trailing `/api/v4`)       |
+| `GITLAB_TOKEN` | Personal access token with `read_api` scope            |
+| `GITLAB_PIPELINE_LAST_STEP` | Tag pipeline last step                                 |
+| `JIRA_URL` | Your Jira instance URL (no trailing `/rest/agile/1.0`) |
+| `JIRA_TOKEN` | Personal access token                                  |
+| `JIRA_BOARD_NAME` | Boards where issues are located                        |
+| `JIRA_ISSUE_STATUS` | Issues status to be added into release                 |
 
 > **Note:** The `.env` file is in `.gitignore` and will not be committed.
 
