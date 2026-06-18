@@ -2,7 +2,6 @@ package ee.aleksale.releaseapp.ui.components;
 
 import static ee.aleksale.releaseapp.utils.BrowserUtils.openInBrowser;
 
-
 import ee.aleksale.releaseapp.event.PipelineUpdateEvent;
 import ee.aleksale.releaseapp.event.ReleaseDeletedEvent;
 import ee.aleksale.releaseapp.event.ReleaseSavedEvent;
@@ -11,6 +10,8 @@ import ee.aleksale.releaseapp.model.common.PipelineStatus;
 import ee.aleksale.releaseapp.model.dto.Release;
 import ee.aleksale.releaseapp.service.PipelineMonitorService;
 import ee.aleksale.releaseapp.service.ReleaseService;
+import ee.aleksale.releaseapp.ui.components.dialog.IssueDialog;
+import ee.aleksale.releaseapp.utils.IssueUtils;
 import ee.aleksale.releaseapp.utils.AppConstants;
 import ee.aleksale.releaseapp.utils.DateUtils;
 import jakarta.annotation.PostConstruct;
@@ -47,6 +48,8 @@ public class ReleasesTable {
   private ObservableList<Release> releaseData;
   @Getter
   private TableView<Release> table;
+
+  private final IssueDialog issueDialog;
 
   private final ReleaseService releaseService;
   private final ApplicationEventPublisher eventPublisher;
@@ -153,8 +156,7 @@ public class ReleasesTable {
     var col = new TableColumn<Release, String>("Issues");
     col.setPrefWidth(200);
     col.setMaxWidth(200);
-    col.setCellValueFactory(c -> new SimpleStringProperty(
-            c.getValue().getIssues() != null ? c.getValue().getIssues() : ""));
+    col.setCellValueFactory(c -> new SimpleStringProperty(formatIssueKeys(c.getValue().getIssues())));
     col.setCellFactory(ignored -> new TableCell<>() {
       private final Tooltip tooltip = new Tooltip();
       @Override
@@ -171,6 +173,13 @@ public class ReleasesTable {
       }
     });
     return col;
+  }
+
+  private String formatIssueKeys(String issuesRaw) {
+    return IssueUtils.parseIssues(issuesRaw).stream()
+            .map(IssueUtils.IssueEntry::key)
+            .reduce((left, right) -> left + ", " + right)
+            .orElse("");
   }
 
   private TableColumn<Release, String> createDateColumn() {
@@ -277,6 +286,7 @@ public class ReleasesTable {
       }
     });
 
+    //TODO: Separate actions -> MANUALY_SUCCESS
     var markManuallySuccessful = new MenuItem("Set status to MANUALLY SUCCESS");
     markManuallySuccessful.setOnAction(event -> {
       var release = row.getItem();
@@ -290,7 +300,17 @@ public class ReleasesTable {
       eventPublisher.publishEvent(new PipelineUpdateEvent(this, release));
     });
 
-    var contextMenu = new ContextMenu(markManuallySuccessful);
+    //TODO: Separate actions -> See issues
+    var seeIssues = new MenuItem("See issues");
+    seeIssues.setOnAction(event -> {
+      var release = row.getItem();
+      if (release == null) {
+        return;
+      }
+      issueDialog.showIssueDialog(release);
+    });
+
+    var contextMenu = new ContextMenu(markManuallySuccessful, seeIssues);
     row.contextMenuProperty().bind(
             Bindings.when(row.emptyProperty())
                     .then((ContextMenu) null)
