@@ -54,6 +54,7 @@ public class ReleaseForm {
         return;
       }
       versionSelectionComponent.loadTags(project);
+      issueChooseComponent.prefillIssues(project.getName());
     });
     versionSelectionComponent.setSelectedProject(projectSelectionComponent::getSelectedProject);
     saveButtonComponent.setOnSave(this::createAndSaveRelease);

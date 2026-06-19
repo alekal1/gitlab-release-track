@@ -48,5 +48,8 @@ public class JiraIssuesResponse {
   public static class JiraIssueFields {
     @JsonProperty(value = "summary")
     private String title;
+
+    private List<String> labels;
+    private List<String> components;
   }
 }

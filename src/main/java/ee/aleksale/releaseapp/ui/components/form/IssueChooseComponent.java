@@ -26,6 +26,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -61,6 +62,18 @@ public class IssueChooseComponent {
     );
 
     initIssues();
+  }
+
+  public void prefillIssues(String projectName) {
+    if (StringUtils.isEmpty(projectName) || issueCombo.getItems().isEmpty()) {
+      return;
+    }
+
+    final var formattedKey = projectName.toLowerCase(Locale.getDefault()).replace(" ", "-");
+
+    selectedIssues.addAll(issueCombo.getItems()
+            .filtered(issue -> issue.getFields().getComponents().contains(formattedKey)
+                    || issue.getFields().getLabels().contains(formattedKey)));
   }
 
   public String buildIssuesValue() {
